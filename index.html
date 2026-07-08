@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аманат — халяльная рассрочка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone">
+
+    <div class="statusbar">
+      <span class="time">9:41</span>
+      <div class="statusicons">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="0.5" fill="currentColor"/><rect x="5" y="4" width="3" height="8" rx="0.5" fill="currentColor"/><rect x="10" y="1" width="3" height="11" rx="0.5" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="0.35"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 2C11 2 13.5 3.3 15 5.1L13.6 6.6C12.4 5.2 10.3 4.2 8 4.2C5.7 4.2 3.6 5.2 2.4 6.6L1 5.1C2.5 3.3 5 2 8 2Z" fill="currentColor"/><circle cx="8" cy="9" r="1.6" fill="currentColor"/></svg>
+        <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="16" height="8" rx="1.3" fill="currentColor"/><rect x="22.5" y="4" width="1.5" height="4" rx="0.7" fill="currentColor"/></svg>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: AUTH (legacy, skipped) -->
+    <section class="screen" id="screen-auth"></section>
+
+    <!-- SCREEN 2: PASSPORT / PINFL + DOB -->
+    <section class="screen" id="screen-idform">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-auth" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="step-label">Шаг 1 из 2</span>
+      </header>
+
+      <div class="screen-body">
+        <h2 class="screen-title">Подтвердите личность</h2>
+        <p class="screen-sub">Введите номер паспорта или ПИНФЛ и дату рождения — это нужно, чтобы сверить вас с базой данных</p>
+
+        <div class="field">
+          <label for="passport">Паспорт или ПИНФЛ</label>
+          <input type="text" id="passport" placeholder="AB1234567 (серия + 7 цифр) или 14 цифр ПИНФЛ" autocomplete="off" maxlength="16">
+        </div>
+
+        <div class="field">
+          <label for="dob">Дата рождения</label>
+          <input type="text" id="dob" placeholder="ДД.ММ.ГГГГ" inputmode="numeric" autocomplete="off">
+        </div>
+
+        <div class="privacy-note">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="#7fa39c" stroke-width="1.2"/><path d="M5.5 7V4.8C5.5 3.25 6.7 2 8 2C9.3 2 10.5 3.25 10.5 4.8V7" stroke="#7fa39c" stroke-width="1.2"/></svg>
+          <span>Данные передаются в зашифрованном виде и защищены законом</span>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-continue-1" data-nav="screen-myid" disabled>Продолжить</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: MY ID / BIOMETRICS -->
+    <section class="screen" id="screen-myid">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-idform" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot done"></span>
+          <span class="dot active"></span>
+        </div>
+        <span class="step-label">Шаг 2 из 2</span>
+      </header>
+
+      <div class="screen-body myid-body">
+        <div class="myid-badge">Биометрия</div>
+        <h2 class="screen-title">MyID</h2>
+        <p class="screen-sub">Сделайте фото лица, чтобы подтвердить: перед нами именно тот человек, чьи данные указаны</p>
+
+        <div class="scan-wrap">
+          <div class="scan-ring" id="scan-ring">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+              <path d="M60 32C68 32 74 39 74 48V52C74 61 68 68 60 68C52 68 46 61 46 52V48C46 39 52 32 60 32Z" stroke="#ffc857" stroke-width="1.6" fill="none"/>
+              <path d="M38 84C42 71 50 66 60 66C70 66 78 71 82 84" stroke="#ffc857" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            </svg>
+            <div class="scan-line" id="scan-line"></div>
+            <svg class="scan-check" id="scan-check" width="54" height="54" viewBox="0 0 54 54" fill="none"><circle cx="27" cy="27" r="26" stroke="#34d399" stroke-width="1.6"/><path d="M17 28L23.5 34.5L37 20" stroke="#34d399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <p class="scan-status" id="scan-status">Расположите лицо в кадре</p>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-scan">Начать сканирование</button>
+        <button class="btn btn-primary btn-hidden" id="btn-continue-2" data-toast="Дальше — экран оформления заявки (скоро)">Продолжить</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: OFFER -->
+    <section class="screen" id="screen-offer">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-myid" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="step-label">Шаг 1 из 6</span>
+      </header>
+
+      <div class="screen-body">
+        <div class="myid-badge badge-coral">Договор</div>
+        <h2 class="screen-title">Оферта рассрочки</h2>
+        <p class="screen-sub">Пролистайте документ до конца, чтобы кнопка подтверждения стала активной</p>
+
+        <div class="offer-box" id="offer-box">
+          <p><strong>1. Предмет договора.</strong> Аманат предоставляет рассрочку по принципу «мурабаха»: компания приобретает товар и продаёт его вам с фиксированной наценкой, без начисления процентов (рибы) на остаток долга.</p>
+          <p><strong>2. Наценка.</strong> Наценка фиксируется один раз в момент подписания и не меняется на протяжении всего срока рассрочки, независимо от изменения ставок или курсов валют.</p>
+          <p><strong>3. График платежей.</strong> Оплата производится равными частями согласно графику, сформированному после подтверждения лимита. График доступен в личном кабинете в любой момент.</p>
+          <p><strong>4. Досрочное погашение.</strong> Вы можете погасить рассрочку досрочно в любой момент без штрафов и скрытых комиссий — итоговая наценка пересчитывается пропорционально.</p>
+          <p><strong>5. Просрочка платежа.</strong> В случае просрочки взимается компенсация фактических издержек, а не проценты — размер компенсации указывается в графике платежей заранее.</p>
+          <p><strong>6. Соответствие шариату.</strong> Продукт сертифицирован наблюдательным советом по стандартам шариата и не содержит риба, гарара и мейсира.</p>
+          <p><strong>7. Обработка данных.</strong> Подписывая договор, вы даёте согласие на обработку персональных данных и их передачу в бюро кредитных историй в рамках, предусмотренных законом.</p>
+          <p><strong>8. Расторжение.</strong> Договор может быть расторгнут по соглашению сторон либо в случаях, предусмотренных законодательством.</p>
+          <p class="offer-end">Вы дочитали до конца документа.</p>
+        </div>
+        <p class="scroll-hint" id="scroll-hint">Прокрутите вниз ↓</p>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-offer-confirm" data-nav="screen-phone" disabled>Подтверждаю и принимаю</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 5: PHONE NUMBER -->
+    <section class="screen active" id="screen-phone">
+      <header class="screen-header">
+        <div style="width:32px"></div>
+        <div class="steps">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="step-label">Шаг 1 из 4</span>
+      </header>
+
+      <div class="screen-body">
+        <h2 class="screen-title">Номер телефона</h2>
+        <p class="screen-sub">На этот номер придёт код для подписания договора</p>
+
+        <div class="field">
+          <label for="phone">Номер телефона</label>
+          <input type="text" id="phone" placeholder="+998 88 888 88 88" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-phone-confirm" data-nav="screen-otp" disabled>Получить код</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 6: OTP SIGNING -->
+    <section class="screen" id="screen-otp">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-phone" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot done"></span>
+          <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="step-label">Шаг 2 из 4</span>
+      </header>
+
+      <div class="screen-body myid-body">
+        <h2 class="screen-title">Подпишите код из СМС</h2>
+        <p class="screen-sub">Отправили 6-значный код на номер <span id="otp-phone-display">+998 88 888 88 88</span>, чтобы подтвердить подписание договора</p>
+
+        <div class="otp-row" id="otp-row">
+          <input class="otp-box" type="text" inputmode="numeric" maxlength="1">
+          <input class="otp-box" type="text" inputmode="numeric" maxlength="1">
+          <input class="otp-box" type="text" inputmode="numeric" maxlength="1">
+          <input class="otp-box" type="text" inputmode="numeric" maxlength="1">
+          <input class="otp-box" type="text" inputmode="numeric" maxlength="1">
+          <input class="otp-box" type="text" inputmode="numeric" maxlength="1">
+        </div>
+
+        <p class="resend-row">
+          Не пришёл код?
+          <button class="resend-link" id="resend-btn" disabled>Отправить повторно (0:59)</button>
+        </p>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-otp-confirm" data-nav="screen-password" disabled>Подтвердить</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 7: CREATE PASSWORD -->
+    <section class="screen" id="screen-password">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-otp" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot active"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="step-label">Шаг 3 из 4</span>
+      </header>
+
+      <div class="screen-body">
+        <h2 class="screen-title">Придумайте пароль</h2>
+        <p class="screen-sub">Пароль понадобится для входа в приложение</p>
+
+        <div class="field">
+          <label for="password">Пароль</label>
+          <div class="password-wrap">
+            <input type="password" id="password" placeholder="Придумайте пароль" autocomplete="new-password">
+            <button type="button" class="password-toggle" id="password-toggle" aria-label="Показать пароль">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M1.5 10C3 6 6.3 3.7 10 3.7C13.7 3.7 17 6 18.5 10C17 14 13.7 16.3 10 16.3C6.3 16.3 3 14 1.5 10Z" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <ul class="req-list" id="req-list">
+          <li class="req-item" id="req-length"><span class="req-dot"></span>Не менее 6 символов</li>
+          <li class="req-item" id="req-letters"><span class="req-dot"></span>Есть буквы</li>
+          <li class="req-item" id="req-digits"><span class="req-dot"></span>Есть цифры</li>
+          <li class="req-item" id="req-upper"><span class="req-dot"></span>Есть заглавная буква</li>
+        </ul>
+
+        <div class="field field-password-repeat">
+          <label for="password-repeat">Повторите пароль</label>
+          <div class="password-wrap">
+            <input type="password" id="password-repeat" placeholder="Повторите пароль" autocomplete="new-password">
+            <button type="button" class="password-toggle" id="password-repeat-toggle" aria-label="Показать пароль">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M1.5 10C3 6 6.3 3.7 10 3.7C13.7 3.7 17 6 18.5 10C17 14 13.7 16.3 10 16.3C6.3 16.3 3 14 1.5 10Z" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.4"/></svg>
+            </button>
+          </div>
+          <p class="req-item" id="req-match"><span class="req-dot"></span>Пароли совпадают</p>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-password-confirm" data-nav="screen-pin" disabled>Продолжить</button>
+      </div>
+    </section>
+
+    <!-- SCREEN PIN: CREATE APP PIN CODE -->
+    <section class="screen" id="screen-pin">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-password" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot active"></span>
+        </div>
+        <span class="step-label">Шаг 4 из 4</span>
+      </header>
+
+      <div class="screen-body myid-body">
+        <h2 class="screen-title" id="pin-title">Придумайте код-пароль</h2>
+        <p class="screen-sub" id="pin-sub">4-значный код для быстрого входа в приложение</p>
+
+        <div class="otp-row" id="pin-row">
+          <input class="otp-box" id="pin-0" type="password" inputmode="numeric" maxlength="1">
+          <input class="otp-box" id="pin-1" type="password" inputmode="numeric" maxlength="1">
+          <input class="otp-box" id="pin-2" type="password" inputmode="numeric" maxlength="1">
+          <input class="otp-box" id="pin-3" type="password" inputmode="numeric" maxlength="1">
+        </div>
+
+        <p class="resend-row" id="pin-error" style="color:#ff8a65;min-height:20px;margin-top:16px;visibility:hidden;">Коды не совпадают, попробуйте снова</p>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-pin-confirm" data-nav="screen-home" disabled>Войти в приложение</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 8: HOME -->
+    <section class="screen" id="screen-home">
+      <div class="screen-body home-body">
+        <div class="stories-row" id="stories-row">
+          <button class="story-item" data-story="news">
+            <span class="story-ring"><span class="story-icon-wrap"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H14.5C15.3 4 16 4.7 16 5.5V15L13 13L10 15L7 13L4 15V5.5Z" stroke="#ffdd8a" stroke-width="1.4" stroke-linejoin="round"/></svg></span></span>
+            <span class="story-label">Новости</span>
+          </button>
+          <button class="story-item" data-story="ramadan">
+            <span class="story-ring"><span class="story-icon-wrap"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 3C9 3.6 6.5 6.7 6.5 10.3C6.5 14.4 9.9 17.7 14 17.4C11.6 19.1 8.5 19.5 5.6 18C1.9 16.1 0.3 11.6 2 7.8C3.5 4.5 6.9 2.5 10.4 2.7C11.1 2.7 11.8 2.8 12.5 3Z" fill="#ffdd8a"/></svg></span></span>
+            <span class="story-label">Рамадан</span>
+          </button>
+          <button class="story-item" data-story="cashback">
+            <span class="story-ring"><span class="story-icon-wrap"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#ffdd8a" stroke-width="1.4"/><path d="M8 12.2C8 13 8.7 13.5 10 13.5C11.3 13.5 12 13 12 12.2C12 10.5 8 11 8 9.3C8 8.5 8.7 8 10 8C11.3 8 12 8.5 12 9.3" stroke="#ffdd8a" stroke-width="1.3" stroke-linecap="round"/></svg></span></span>
+            <span class="story-label">Кэшбэк</span>
+          </button>
+          <button class="story-item" data-story="guide">
+            <span class="story-ring"><span class="story-icon-wrap"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 4.5C4 4.5 6.5 3.5 9.5 4.5V16C6.5 15 4 16 4 16V4.5Z" stroke="#ffdd8a" stroke-width="1.3" stroke-linejoin="round"/><path d="M16 4.5C16 4.5 13.5 3.5 10.5 4.5V16C13.5 15 16 16 16 16V4.5Z" stroke="#ffdd8a" stroke-width="1.3" stroke-linejoin="round"/></svg></span></span>
+            <span class="story-label">Гид</span>
+          </button>
+          <button class="story-item" data-story="sale">
+            <span class="story-ring"><span class="story-icon-wrap"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10.8V4.5C3 3.7 3.7 3 4.5 3H10.8C11.2 3 11.6 3.2 11.9 3.5L17 8.6C17.5 9.2 17.5 10 17 10.6L11.1 16.5C10.5 17 9.7 17 9.1 16.5L4 11.4C3.4 11.1 3 10.9 3 10.8Z" stroke="#ffdd8a" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7.2" cy="7.2" r="1.2" fill="#ffdd8a"/></svg></span></span>
+            <span class="story-label">Акции</span>
+          </button>
+        </div>
+
+        <div class="home-header-row">
+          <div class="user-avatar">О</div>
+          <div class="home-header-text">
+            <p class="home-greeting">Здравствуйте</p>
+            <h2 class="home-username">Олег</h2>
+          </div>
+          <div class="home-header-actions">
+            <button class="prayer-pill prayer-open-btn" aria-label="Ближайший намаз">
+              <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M8.5 1.5C6.2 2.7 4.8 4.9 4.8 7.5C4.8 10.6 7 13 9.8 13.4C7.9 14.4 5.6 14.5 3.6 13.4C0.9 11.9 -0.3 8.6 1 5.8C2.1 3.5 4.3 2 6.8 1.8C7.4 1.7 8 1.6 8.5 1.5Z" fill="currentColor"/></svg>
+              <span class="prayer-label">Аср • 16:47</span>
+            </button>
+            <button class="bell-btn" id="notif-open-btn" aria-label="Уведомления">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 13.5C4 13.5 3.2 13.5 3.2 12.7C3.2 12 4 11.8 4 9.5C4 6.5 5.8 4.5 9 4.5C12.2 4.5 14 6.5 14 9.5C14 11.8 14.8 12 14.8 12.7C14.8 13.5 14 13.5 14 13.5H4Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M7.3 15.5C7.7 16.1 8.3 16.4 9 16.4C9.7 16.4 10.3 16.1 10.7 15.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              <span class="bell-dot" id="bell-dot"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-card-widget">
+          <div class="empty-card-icon">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="6" width="24" height="16" rx="3" stroke="#ffc857" stroke-width="1.6"/><path d="M2 11H26" stroke="#ffc857" stroke-width="1.6"/><path d="M6 17H12" stroke="#ffc857" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="empty-card-title">Карта не привязана</h3>
+          <p class="empty-card-sub">Привяжите карту, чтобы получить лимит на рассрочку</p>
+          <button class="btn btn-primary" data-nav="screen-card">Добавить карту</button>
+        </div>
+
+        <div class="products-section">
+          <h3 class="section-label">Товары по супер скидке</h3>
+          <div class="products-carousel">
+            <button class="product-card" data-card-required>
+              <span class="product-badge">-30%</span>
+              <span class="product-icon product-icon-teal">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="2" width="12" height="18" rx="2.5" stroke="#2dd4a8" stroke-width="1.5"/><path d="M9.5 17H12.5" stroke="#2dd4a8" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <span class="product-name">Смартфон Galaxy S24</span>
+              <span class="product-price"><span class="price-old">12 000 000</span><span class="price-new">8 400 000 сум</span></span>
+            </button>
+
+            <button class="product-card" data-card-required>
+              <span class="product-badge">-25%</span>
+              <span class="product-icon product-icon-gold">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="4" width="18" height="11" rx="1.5" stroke="#ffc857" stroke-width="1.5"/><path d="M1 18H21" stroke="#ffc857" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <span class="product-name">Ноутбук ASUS Vivobook</span>
+              <span class="product-price"><span class="price-old">9 200 000</span><span class="price-new">6 900 000 сум</span></span>
+            </button>
+
+            <button class="product-card" data-card-required>
+              <span class="product-badge">-20%</span>
+              <span class="product-icon product-icon-coral">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="6" y="3" width="10" height="16" rx="3" stroke="#ff8a65" stroke-width="1.5"/><path d="M9 6.5H13" stroke="#ff8a65" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <span class="product-name">Смарт-часы Amazfit</span>
+              <span class="product-price"><span class="price-old">1 800 000</span><span class="price-new">1 440 000 сум</span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <nav class="bottom-tabbar">
+        <button class="tab-btn" data-nav="screen-home">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V16.5C17 17.05 16.55 17.5 16 17.5H4C3.45 17.5 3 17.05 3 16.5V9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <span>Главная</span>
+        </button>
+        <button class="tab-btn" data-nav="screen-installment">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="2.5" width="13" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 6.5H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 10H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 13.5H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Рассрочка</span>
+        </button>
+      </nav>
+    </section>
+
+    <!-- SCREEN 9: INSTALLMENTS -->
+    <section class="screen" id="screen-installment">
+      <div class="screen-body home-body">
+        <h2 class="screen-title">Рассрочка</h2>
+
+        <div class="empty-state-block">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="6" y="9" width="28" height="24" rx="4" stroke="#2dd4a8" stroke-width="1.6" opacity="0.7"/><path d="M6 16H34" stroke="#2dd4a8" stroke-width="1.6" opacity="0.7"/><path d="M13 23H27" stroke="#2dd4a8" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/><path d="M13 27H21" stroke="#2dd4a8" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/></svg>
+          <p>У вас пока нет активных рассрочек</p>
+        </div>
+      </div>
+
+      <nav class="bottom-tabbar">
+        <button class="tab-btn" data-nav="screen-home">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V16.5C17 17.05 16.55 17.5 16 17.5H4C3.45 17.5 3 17.05 3 16.5V9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <span>Главная</span>
+        </button>
+        <button class="tab-btn" data-nav="screen-installment">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="2.5" width="13" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 6.5H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 10H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 13.5H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Рассрочка</span>
+        </button>
+      </nav>
+    </section>
+
+    <!-- SCREEN 10: CARD BINDING -->
+    <section class="screen" id="screen-card">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-home" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot active"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="step-label">Шаг 5 из 6</span>
+      </header>
+
+      <div class="screen-body">
+        <h2 class="screen-title">Привяжите карту</h2>
+        <p class="screen-sub">Привяжите банковскую карту, чтобы получить лимит на рассрочку</p>
+
+        <div class="card-visual" id="card-visual">
+          <div class="card-visual-top">
+            <span class="card-chip"></span>
+            <span class="card-brand">АМАНАТ</span>
+          </div>
+          <div class="card-number" id="card-number-preview">•••• •••• •••• ••••</div>
+          <div class="card-visual-bottom">
+            <div>
+              <div class="card-mini-label">Владелец карты</div>
+              <div class="card-holder" id="card-holder-preview">ВАШЕ ИМЯ</div>
+            </div>
+            <div>
+              <div class="card-mini-label">Срок</div>
+              <div class="card-holder" id="card-expiry-preview">ММ/ГГ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="card-number">Номер карты</label>
+          <input type="text" id="card-number" placeholder="0000 0000 0000 0000" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="card-expiry">Срок действия</label>
+            <input type="text" id="card-expiry" placeholder="ММ/ГГ" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="card-cvv">CVV</label>
+            <input type="password" id="card-cvv" placeholder="•••" inputmode="numeric" maxlength="3" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-card-confirm" data-nav="screen-oneid" disabled>Привязать карту</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 7: ONEID PERMISSION -->
+    <section class="screen" id="screen-oneid">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-card" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot active"></span>
+        </div>
+        <span class="step-label">Шаг 6 из 6</span>
+      </header>
+
+      <div class="screen-body myid-body">
+        <div class="oneid-icon">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+            <circle cx="36" cy="36" r="34" stroke="#2dd4a8" stroke-width="2" opacity="0.35"/>
+            <path d="M36 14L54 21V35C54 47 46.5 55.5 36 59C25.5 55.5 18 47 18 35V21L36 14Z" stroke="#ffc857" stroke-width="2" fill="rgba(255,200,87,0.08)"/>
+            <path d="M27 36L33 42L45 29" stroke="#34d399" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="screen-title">Разрешение OneID</h2>
+        <p class="screen-sub">Разрешите приложению OneID передать ваши данные для подтверждения личности и оформления лимита</p>
+
+        <label class="check-row" id="oneid-check-row">
+          <input type="checkbox" id="oneid-checkbox">
+          <span class="check-box" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="#0d1210" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="check-label">Я даю разрешение на использование данных OneID</span>
+        </label>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-oneid-confirm" data-nav="screen-loader" disabled>Получить лимит</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 8: LOADER -->
+    <section class="screen" id="screen-loader">
+      <div class="loader-body">
+        <div class="loader-spinner" id="loader-spinner">
+          <span></span><span></span><span></span>
+        </div>
+        <svg class="loader-check" id="loader-check" width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" stroke="#34d399" stroke-width="2.4"/>
+          <path d="M20 33L28 41L44 23" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="loader-text" id="loader-text">Оформляем ваш лимит…</p>
+        <p class="loader-sub" id="loader-sub">Это займёт несколько секунд</p>
+        <button class="btn btn-primary loader-done-btn btn-hidden" id="btn-loader-done" data-toast="Конец прототипа — дальше главный экран">Отлично</button>
+      </div>
+    </section>
+
+    <!-- AYAT OF THE DAY MODAL -->
+    <div class="ayat-overlay" id="ayat-overlay">
+      <div class="ayat-modal">
+        <button class="ayat-close" id="ayat-close-btn" aria-label="Закрыть">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div class="ayat-badge">Аят дня</div>
+        <p class="ayat-arabic">إِنَّمَا الْبَيْعُ مِثْلُ الرِّبَا ۗ وَأَحَلَّ اللَّهُ الْبَيْعَ وَحَرَّمَ الرِّبَا</p>
+        <p class="ayat-text">«...Аллах разрешил торговлю и запретил лихоимство (рибу)...»</p>
+        <p class="ayat-source">Коран, сура «Аль-Бакара», аят 2:275</p>
+      </div>
+    </div>
+
+    <!-- PRAYER TIMES MODAL -->
+    <div class="ayat-overlay" id="prayer-overlay">
+      <div class="ayat-modal">
+        <button class="ayat-close" id="prayer-close-btn" aria-label="Закрыть">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div class="ayat-badge">Время намаза</div>
+        <ul class="prayer-list" id="prayer-list"></ul>
+      </div>
+    </div>
+
+    <!-- CARD REQUIRED MODAL -->
+    <div class="ayat-overlay" id="card-required-overlay">
+      <div class="ayat-modal">
+        <button class="ayat-close" id="card-required-close-btn" aria-label="Закрыть">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div class="empty-card-icon" style="margin: 0 auto 16px;">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="6" width="24" height="16" rx="3" stroke="#ffc857" stroke-width="1.6"/><path d="M2 11H26" stroke="#ffc857" stroke-width="1.6"/><path d="M6 17H12" stroke="#ffc857" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <h3 class="empty-card-title">Привяжите карту</h3>
+        <p class="empty-card-sub" style="margin-left:auto;margin-right:auto;">Чтобы оформить этот товар в рассрочку, сначала привяжите банковскую карту</p>
+        <button class="btn btn-primary" id="card-required-cta" data-nav="screen-card">Привязать карту</button>
+      </div>
+    </div>
+
+    <!-- STORY MODAL -->
+    <div class="ayat-overlay" id="story-overlay">
+      <div class="ayat-modal">
+        <button class="ayat-close" id="story-close-btn" aria-label="Закрыть">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div class="ayat-badge" id="story-badge">Новости</div>
+        <h3 class="empty-card-title" id="story-title">Заголовок</h3>
+        <p class="empty-card-sub" id="story-text" style="margin-left:auto;margin-right:auto;">Текст</p>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS MODAL -->
+    <div class="ayat-overlay" id="notif-overlay">
+      <div class="ayat-modal notif-modal">
+        <button class="ayat-close" id="notif-close-btn" aria-label="Закрыть">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div class="ayat-badge">Уведомления</div>
+        <ul class="notif-list">
+          <li class="notif-item">
+            <span class="notif-icon notif-icon-teal">
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="7" stroke="#2dd4a8" stroke-width="1.4"/><path d="M5.5 8.7L7.5 10.7L11.5 6.2" stroke="#2dd4a8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <div class="notif-body">
+              <p class="notif-title">Лимит одобрен</p>
+              <p class="notif-sub">Вам доступно 5 000 000 сум на покупки в рассрочку</p>
+              <p class="notif-time">Сегодня, 09:12</p>
+            </div>
+          </li>
+          <li class="notif-item">
+            <span class="notif-icon notif-icon-coral">
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M3 9.3V3.8C3 3.4 3.4 3 3.8 3H9.3C9.6 3 9.9 3.1 10.1 3.4L14 7.3C14.4 7.7 14.4 8.4 14 8.8L8.8 14C8.4 14.4 7.7 14.4 7.3 14L3.4 10.1C3.1 9.8 3 9.5 3 9.3Z" stroke="#ff8a65" stroke-width="1.3" stroke-linejoin="round"/><circle cx="6.3" cy="6.3" r="1" fill="#ff8a65"/></svg>
+            </span>
+            <div class="notif-body">
+              <p class="notif-title">Скидка 30% на смартфоны</p>
+              <p class="notif-sub">Успейте оформить рассрочку по акции до конца недели</p>
+              <p class="notif-time">Вчера, 18:40</p>
+            </div>
+          </li>
+          <li class="notif-item">
+            <span class="notif-icon notif-icon-gold">
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><rect x="3" y="4" width="11" height="10" rx="1.5" stroke="#ffc857" stroke-width="1.3"/><path d="M3 7H14" stroke="#ffc857" stroke-width="1.3"/><path d="M6 2.5V5" stroke="#ffc857" stroke-width="1.3" stroke-linecap="round"/><path d="M11 2.5V5" stroke="#ffc857" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </span>
+            <div class="notif-body">
+              <p class="notif-title">Платёж через 3 дня</p>
+              <p class="notif-sub">Не забудьте пополнить карту к дате списания</p>
+              <p class="notif-time">2 дня назад</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <nav class="devnav" id="devnav">
+    <button class="devnav-btn" data-goto="screen-phone">1. Телефон</button>
+    <button class="devnav-btn" data-goto="screen-otp">2. ОТП</button>
+    <button class="devnav-btn" data-goto="screen-password">3. Пароль</button>
+    <button class="devnav-btn" data-goto="screen-pin">4. Пин-код</button>
+    <button class="devnav-btn" data-goto="screen-home">5. Главная</button>
+    <button class="devnav-btn" data-goto="screen-installment">6. Рассрочка</button>
+    <button class="devnav-btn" data-goto="screen-card">7. Карта</button>
+    <button class="devnav-btn" data-goto="screen-oneid">8. OneID</button>
+    <button class="devnav-btn" data-goto="screen-loader">9. Лоудер</button>
+  </nav>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
