@@ -1,4 +1,5 @@
 const screenEnterHandlers = {};
+let cardBound = false;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -37,18 +38,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// --- Ayat of the day modal ---
-const ayatOverlay = document.getElementById('ayat-overlay');
-const ayatOpenBtn = document.getElementById('ayat-open-btn');
-const ayatCloseBtn = document.getElementById('ayat-close-btn');
-
-ayatOpenBtn.addEventListener('click', () => ayatOverlay.classList.add('show'));
-ayatCloseBtn.addEventListener('click', () => ayatOverlay.classList.remove('show'));
-ayatOverlay.addEventListener('click', (e) => {
-  if (e.target === ayatOverlay) ayatOverlay.classList.remove('show');
-});
-
-// --- Next prayer widget (static Tashkent-style schedule for the prototype) ---
+// --- Next prayer widget ---
 const prayerTimes = [
   { name: 'Фаджр', time: '04:47' },
   { name: 'Зухр', time: '12:31' },
@@ -162,6 +152,19 @@ cardRequiredOverlay.addEventListener('click', (e) => {
 });
 cardRequiredCta.addEventListener('click', () => cardRequiredOverlay.classList.remove('show'));
 
+// --- Home screen: toggle limit widget ---
+screenEnterHandlers['screen-home'] = () => {
+  const emptyWidget = document.getElementById('empty-card-widget');
+  const limitWidget = document.getElementById('limit-widget');
+  if (cardBound) {
+    emptyWidget.style.display = 'none';
+    limitWidget.classList.add('show');
+  } else {
+    emptyWidget.style.display = '';
+    limitWidget.classList.remove('show');
+  }
+};
+
 // --- Screen 2: form validation ---
 const passportInput = document.getElementById('passport');
 const dobInput = document.getElementById('dob');
@@ -177,28 +180,27 @@ function formatDob(value) {
 
 dobInput.addEventListener('input', () => {
   dobInput.value = formatDob(dobInput.value);
-  validateForm();
+  validateIdForm();
 });
 
 function sanitizePassport(value) {
   const cleaned = value.toUpperCase().replace(/[^A-ZА-Я0-9]/g, '');
-  // if it starts with 2 letters, treat as passport format: letters + digits only after
   const lettersMatch = cleaned.match(/^[A-ZА-Я]{0,2}/)[0];
   const rest = cleaned.slice(lettersMatch.length).replace(/\D/g, '');
   if (lettersMatch.length > 0) {
-    return (lettersMatch + rest).slice(0, 9); // 2 letters + 7 digits
+    return (lettersMatch + rest).slice(0, 9);
   }
-  return rest.slice(0, 14); // pure digits -> PINFL, up to 14
+  return rest.slice(0, 14);
 }
 
 passportInput.addEventListener('input', () => {
   const cursorAtEnd = passportInput.selectionStart === passportInput.value.length;
   passportInput.value = sanitizePassport(passportInput.value);
   if (cursorAtEnd) passportInput.setSelectionRange(passportInput.value.length, passportInput.value.length);
-  validateForm();
+  validateIdForm();
 });
 
-function validateForm() {
+function validateIdForm() {
   const id = passportInput.value.trim();
   const isPinfl = /^\d{14}$/.test(id);
   const isPassport = /^[A-ZА-Я]{2}\d{7}$/.test(id);
@@ -227,7 +229,6 @@ scanBtn.addEventListener('click', () => {
   }, 2000);
 });
 
-// Reset screen 3 state whenever we navigate into it fresh
 screenEnterHandlers['screen-myid'] = () => {
   scanRing.classList.remove('scanning', 'done');
   scanStatus.textContent = 'Расположите лицо в кадре';
@@ -277,7 +278,7 @@ phoneInput.addEventListener('input', () => {
   phoneInput.value = formatPhone(phoneInput.value);
   phoneInput.setSelectionRange(phoneInput.value.length, phoneInput.value.length);
   const digits = phoneInput.value.replace(/\D/g, '');
-  phoneConfirmBtn.disabled = digits.length !== 12; // 998 + 9 digits
+  phoneConfirmBtn.disabled = digits.length !== 12;
 });
 
 screenEnterHandlers['screen-phone'] = () => {
@@ -289,7 +290,7 @@ document.getElementById('btn-phone-confirm').addEventListener('click', () => {
 });
 
 // --- Screen 6: OTP input ---
-const otpBoxes = Array.from(document.querySelectorAll('.otp-box'));
+const otpBoxes = Array.from(document.querySelectorAll('#otp-row .otp-box'));
 const otpConfirmBtn = document.getElementById('btn-otp-confirm');
 const resendBtn = document.getElementById('resend-btn');
 let resendTimer = null;
@@ -395,7 +396,7 @@ screenEnterHandlers['screen-password'] = () => {
   [reqLength, reqLetters, reqDigits, reqUpper, reqMatch].forEach(el => el.classList.remove('met'));
 };
 
-// --- Screen 8: card binding ---
+// --- Screen card binding ---
 const cardNumberInput = document.getElementById('card-number');
 const cardExpiryInput = document.getElementById('card-expiry');
 const cardCvvInput = document.getElementById('card-cvv');
@@ -430,15 +431,16 @@ function validateCard() {
   cardConfirmBtn.disabled = !(numOk && expOk && cvvOk);
 }
 
-// --- Screen 7: OneID checkbox ---
-const oneidCheckbox = document.getElementById('oneid-checkbox');
-const oneidConfirmBtn = document.getElementById('btn-oneid-confirm');
+screenEnterHandlers['screen-card'] = () => {
+  cardNumberInput.value = '';
+  cardExpiryInput.value = '';
+  cardCvvInput.value = '';
+  cardNumberPreview.textContent = '•••• •••• •••• ••••';
+  cardExpiryPreview.textContent = 'ММ/ГГ';
+  cardConfirmBtn.disabled = true;
+};
 
-oneidCheckbox.addEventListener('change', () => {
-  oneidConfirmBtn.disabled = !oneidCheckbox.checked;
-});
-
-// --- Screen 8: loader simulation ---
+// --- Loader simulation ---
 const loaderSpinner = document.getElementById('loader-spinner');
 const loaderCheck = document.getElementById('loader-check');
 const loaderText = document.getElementById('loader-text');
@@ -456,8 +458,9 @@ screenEnterHandlers['screen-loader'] = () => {
   screenEnterHandlers._loaderTimeout = setTimeout(() => {
     loaderSpinner.style.display = 'none';
     loaderCheck.classList.add('show');
-    loaderText.textContent = 'Готово! Лимит одобрен';
-    loaderSub.textContent = '5 000 000 сум доступно для покупок в рассрочку';
+    loaderText.textContent = 'Лимит одобрен!';
+    loaderSub.textContent = '7 000 000 сум доступно для покупок в рассрочку';
+    cardBound = true;
     loaderDoneBtn.classList.remove('btn-hidden');
   }, 2200);
 };
@@ -468,7 +471,7 @@ const pinConfirmBtn = document.getElementById('btn-pin-confirm');
 const pinTitle = document.getElementById('pin-title');
 const pinSub = document.getElementById('pin-sub');
 const pinError = document.getElementById('pin-error');
-let pinStep = 'create'; // 'create' | 'confirm'
+let pinStep = 'create';
 let pinFirst = '';
 
 function resetPinBoxes() {
@@ -519,3 +522,27 @@ screenEnterHandlers['screen-pin'] = () => {
   pinError.style.visibility = 'hidden';
   resetPinBoxes();
 };
+
+// --- Sadaqa: category filter ---
+document.querySelectorAll('.sadaqa-cat').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sadaqa-cat').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.sadaqa-card').forEach(card => {
+      if (cat === 'all' || card.dataset.cat === cat) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+});
+
+// --- Sadaqa: donate buttons ---
+document.querySelectorAll('.sadaqa-donate-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showToast(`Джазакаллаху хайран! Перевод в «${btn.dataset.donate}» отправлен`);
+  });
+});
