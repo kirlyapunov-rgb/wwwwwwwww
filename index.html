@@ -360,6 +360,18 @@
           <button class="btn btn-primary" data-nav="screen-qr">Оформить рассрочку</button>
         </div>
 
+        <!-- Widget after application submitted (hidden by default) -->
+        <div class="pending-widget" id="pending-widget">
+          <div class="pending-spinner"></div>
+          <p class="pending-title">Запрос в обработке</p>
+          <p class="pending-store" id="pending-store-name">Texnomart — Чиланзар</p>
+          <p class="pending-sub">Магазин рассматривает вашу заявку. Ответ придёт в течение 15 минут</p>
+          <div class="pending-status-row">
+            <span class="pending-dot"></span>
+            <span>Ожидаем подтверждения от магазина</span>
+          </div>
+        </div>
+
         <div class="products-section">
           <h3 class="section-label">Товары по супер скидке</h3>
           <div class="products-carousel">
@@ -709,56 +721,54 @@
       </div>
     </section>
 
-    <!-- SCREEN QR CODE -->
+    <!-- SCREEN QR SCANNER -->
     <section class="screen" id="screen-qr">
       <header class="screen-header">
         <button class="back-btn" data-nav="screen-home" aria-label="Назад">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <span class="qr-screen-title">Ваш QR-код</span>
+        <span class="qr-screen-title">Сканировать QR</span>
         <div style="width:34px"></div>
       </header>
 
       <div class="screen-body myid-body">
-        <p class="screen-sub" style="margin-bottom:20px;max-width:280px;">Покажите код кассиру в магазине — он отсканирует и откроет форму заявки</p>
+        <p class="screen-sub" style="margin-bottom:20px;max-width:280px;">Наведите камеру на QR-код, расположенный на кассе или стойке магазина</p>
 
-        <div class="qr-wrap">
-          <div class="qr-inner">
-            <svg id="qr-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-            <div class="qr-logo">А</div>
+        <div class="qr-scanner-wrap">
+          <div class="qr-scanner-frame" id="qr-scanner-frame">
+            <span class="qr-corner qr-corner-tl"></span>
+            <span class="qr-corner qr-corner-tr"></span>
+            <span class="qr-corner qr-corner-bl"></span>
+            <span class="qr-corner qr-corner-br"></span>
+            <div class="qr-scan-beam"></div>
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" opacity="0.18">
+              <rect x="4" y="4" width="26" height="26" rx="3" stroke="#1a2b30" stroke-width="3"/>
+              <rect x="11" y="11" width="12" height="12" fill="#1a2b30"/>
+              <rect x="42" y="4" width="26" height="26" rx="3" stroke="#1a2b30" stroke-width="3"/>
+              <rect x="49" y="11" width="12" height="12" fill="#1a2b30"/>
+              <rect x="4" y="42" width="26" height="26" rx="3" stroke="#1a2b30" stroke-width="3"/>
+              <rect x="11" y="49" width="12" height="12" fill="#1a2b30"/>
+              <rect x="42" y="42" width="5" height="5" fill="#1a2b30"/>
+              <rect x="50" y="42" width="5" height="5" fill="#1a2b30"/>
+              <rect x="58" y="42" width="5" height="5" fill="#1a2b30"/>
+              <rect x="42" y="50" width="5" height="5" fill="#1a2b30"/>
+              <rect x="58" y="50" width="5" height="5" fill="#1a2b30"/>
+              <rect x="50" y="58" width="5" height="5" fill="#1a2b30"/>
+              <rect x="42" y="58" width="5" height="5" fill="#1a2b30"/>
+            </svg>
           </div>
-          <div class="qr-timer-row">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#8aa5ac" stroke-width="1.1"/><path d="M6 3.5V6L7.5 7.5" stroke="#8aa5ac" stroke-width="1.1" stroke-linecap="round"/></svg>
-            <span class="qr-valid">Действителен <span id="qr-timer">30:00</span></span>
-          </div>
+          <p class="qr-scanner-hint">QR-код находится на кассе или стойке магазина</p>
         </div>
 
         <div class="qr-limit-row">
           <span class="qr-limit-label">Доступный лимит</span>
           <span class="qr-limit-value">7 000 000 сум</span>
         </div>
-
-        <div class="qr-hint-row">
-          <div class="qr-hint-item">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1" stroke="#0fa882" stroke-width="1.3"/><rect x="11" y="3" width="6" height="6" rx="1" stroke="#0fa882" stroke-width="1.3"/><rect x="3" y="11" width="6" height="6" rx="1" stroke="#0fa882" stroke-width="1.3"/><rect x="12" y="12" width="2" height="2" fill="#0fa882"/><rect x="15" y="12" width="2" height="2" fill="#0fa882"/><rect x="12" y="15" width="2" height="2" fill="#0fa882"/><rect x="15" y="15" width="2" height="2" fill="#0fa882"/></svg>
-            <span>Покажите кассиру</span>
-          </div>
-          <div class="qr-hint-sep"></div>
-          <div class="qr-hint-item">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 8V5C4 4.4 4.4 4 5 4H8" stroke="#0fa882" stroke-width="1.3" stroke-linecap="round"/><path d="M16 8V5C16 4.4 15.6 4 15 4H12" stroke="#0fa882" stroke-width="1.3" stroke-linecap="round"/><path d="M4 12V15C4 15.6 4.4 16 5 16H8" stroke="#0fa882" stroke-width="1.3" stroke-linecap="round"/><path d="M16 12V15C16 15.6 15.6 16 15 16H12" stroke="#0fa882" stroke-width="1.3" stroke-linecap="round"/></svg>
-            <span>Кассир сканирует</span>
-          </div>
-          <div class="qr-hint-sep"></div>
-          <div class="qr-hint-item">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10L8.5 13.5L15 7" stroke="#0fa882" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Заявка готова</span>
-          </div>
-        </div>
       </div>
 
       <div class="screen-footer">
-        <button class="btn btn-primary" id="btn-qr-next" data-nav="screen-store-form">Симулировать сканирование →</button>
-        <p style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:4px;">Код обновляется автоматически каждые 30 минут</p>
+        <button class="btn btn-primary" id="btn-qr-next" data-nav="screen-store-form">Симулировать сканирование</button>
+        <p style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:6px;">Наведите камеру — код считается автоматически</p>
       </div>
     </section>
 

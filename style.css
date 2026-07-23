@@ -1441,7 +1441,7 @@ html, body {
   font-weight: 600;
 }
 
-/* ---------- QR CODE SCREEN ---------- */
+/* ---------- QR SCANNER SCREEN ---------- */
 .qr-screen-title {
   font-family: var(--font-display);
   font-weight: 700;
@@ -1451,53 +1451,62 @@ html, body {
   text-align: center;
 }
 
-.qr-wrap {
+.qr-scanner-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 4px 0 20px;
+  width: 100%;
 }
 
-.qr-inner {
+.qr-scanner-frame {
   position: relative;
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 18px;
-  box-shadow: 0 8px 32px -8px rgba(0,0,0,0.14), 0 0 0 1px var(--border);
-}
-
-#qr-svg { display: block; }
-
-.qr-logo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  width: 220px;
+  height: 220px;
+  background: var(--surface-2);
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 18px;
-  color: #23180a;
-  box-shadow: 0 2px 8px -2px rgba(212,153,26,0.5);
+  overflow: hidden;
 }
 
-.qr-timer-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 12px;
+.qr-corner {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-color: var(--gold);
+  border-style: solid;
+}
+.qr-corner-tl { top: 14px; left: 14px; border-width: 3px 0 0 3px; border-radius: 5px 0 0 0; }
+.qr-corner-tr { top: 14px; right: 14px; border-width: 3px 3px 0 0; border-radius: 0 5px 0 0; }
+.qr-corner-bl { bottom: 14px; left: 14px; border-width: 0 0 3px 3px; border-radius: 0 0 0 5px; }
+.qr-corner-br { bottom: 14px; right: 14px; border-width: 0 3px 3px 0; border-radius: 0 0 5px 0; }
+
+.qr-scan-beam {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 2px;
+  animation: qr-beam 2s ease-in-out infinite;
 }
 
-.qr-valid {
-  font-size: 12px;
+@keyframes qr-beam {
+  0%   { top: 24px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: calc(100% - 24px); opacity: 0; }
+}
+
+.qr-scanner-hint {
+  margin-top: 14px;
+  font-size: 12.5px;
   color: var(--text-muted);
   font-weight: 600;
+  text-align: center;
+  max-width: 220px;
 }
 
 .qr-limit-row {
@@ -1509,7 +1518,6 @@ html, body {
   border-radius: 14px;
   padding: 14px 18px;
   width: 100%;
-  margin-bottom: 16px;
 }
 
 .qr-limit-label {
@@ -1524,35 +1532,83 @@ html, body {
   color: var(--text-primary);
 }
 
-.qr-hint-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  width: 100%;
-  background: rgba(15,168,130,0.05);
-  border: 1px solid rgba(15,168,130,0.18);
-  border-radius: 14px;
-  padding: 14px 8px;
-}
-
-.qr-hint-item {
-  display: flex;
+/* ---------- PENDING WIDGET ---------- */
+.pending-widget {
+  margin-top: 26px;
+  background: linear-gradient(135deg, rgba(212,153,26,0.06), rgba(15,168,130,0.04));
+  border: 1.5px solid rgba(212,153,26,0.2);
+  border-radius: 20px;
+  padding: 26px 22px;
+  text-align: center;
+  display: none;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  flex: 1;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-align: center;
+}
+.pending-widget.show { display: flex; }
+
+.pending-spinner {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3.5px solid var(--surface-2);
+  border-top-color: var(--gold);
+  animation: spin 1.2s linear infinite;
+  margin-bottom: 18px;
+  flex-shrink: 0;
 }
 
-.qr-hint-sep {
-  width: 1px;
-  height: 32px;
-  background: rgba(15,168,130,0.2);
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.pending-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.pending-store {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal);
+  margin-bottom: 8px;
+}
+
+.pending-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 16px;
+  max-width: 240px;
+}
+
+.pending-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  width: 100%;
+  justify-content: center;
+}
+
+.pending-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse-dot 1.5s ease-in-out infinite;
   flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
 }
 
 /* ---------- STORE FORM SCREEN ---------- */
