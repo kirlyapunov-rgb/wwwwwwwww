@@ -523,6 +523,160 @@ screenEnterHandlers['screen-pin'] = () => {
   resetPinBoxes();
 };
 
+// --- QR Code screen ---
+function renderFakeQR() {
+  const size = 25;
+  const M = [];
+  for (let r = 0; r < size; r++) M[r] = new Array(size).fill(0);
+
+  function addFinder(row, col) {
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 7; c++) {
+        if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+          M[row + r][col + c] = 1;
+        }
+      }
+    }
+  }
+  addFinder(0, 0);
+  addFinder(0, 18);
+  addFinder(18, 0);
+
+  // Timing patterns
+  for (let i = 8; i <= 16; i++) {
+    if (i % 2 === 0) { M[6][i] = 1; M[i][6] = 1; }
+  }
+
+  // Data modules with fixed seed
+  let rng = 0x1A2B3C4D;
+  const nextBit = () => { rng = ((rng * 1664525 + 1013904223) >>> 0); return (rng >>> 31) & 1; };
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (r < 9 && c < 9) continue;
+      if (r < 9 && c >= 17) continue;
+      if (r >= 17 && c < 9) continue;
+      if (r === 6 || c === 6) continue;
+      if (M[r][c] === 0) M[r][c] = nextBit();
+    }
+  }
+
+  // Blank out center for logo
+  for (let r = 10; r <= 14; r++) {
+    for (let c = 10; c <= 14; c++) { M[r][c] = 0; }
+  }
+
+  const px = 9;
+  const svg = document.getElementById('qr-svg');
+  svg.setAttribute('width', size * px);
+  svg.setAttribute('height', size * px);
+  svg.setAttribute('viewBox', `0 0 ${size * px} ${size * px}`);
+  const rects = [];
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (M[r][c]) rects.push(`<rect x="${c * px}" y="${r * px}" width="${px}" height="${px}" fill="#1a2b30"/>`);
+    }
+  }
+  svg.innerHTML = rects.join('');
+}
+
+let qrTimerInterval = null;
+
+screenEnterHandlers['screen-qr'] = () => {
+  renderFakeQR();
+  clearInterval(qrTimerInterval);
+  let seconds = 30 * 60;
+  const timerEl = document.getElementById('qr-timer');
+  function tick() {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
+    if (seconds > 0) seconds--;
+  }
+  tick();
+  qrTimerInterval = setInterval(tick, 1000);
+};
+
+// Stop timer when leaving QR screen
+const origShowScreen = showScreen;
+
+// --- Store form screen ---
+const itemPriceInput = document.getElementById('item-price');
+const submitOrderBtn = document.getElementById('btn-submit-order');
+const productPhotoInput = document.getElementById('product-photo-input');
+const barcodePhotoInput = document.getElementById('barcode-photo-input');
+const productPhotoPreview = document.getElementById('product-photo-preview');
+const barcodePhotoPreview = document.getElementById('barcode-photo-preview');
+const productPhotoArea = document.getElementById('product-photo-area');
+const barcodePhotoArea = document.getElementById('barcode-photo-area');
+const productPhotoContent = document.getElementById('product-photo-content');
+const barcodePhotoContent = document.getElementById('barcode-photo-content');
+
+let productPhotoSet = false;
+let barcodePhotoSet = false;
+
+function formatPrice(val) {
+  return val.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+itemPriceInput.addEventListener('input', () => {
+  itemPriceInput.value = formatPrice(itemPriceInput.value);
+  validateStoreForm();
+});
+
+function validateStoreForm() {
+  const priceOk = itemPriceInput.value.replace(/\D/g, '').length > 0;
+  submitOrderBtn.disabled = !(priceOk && productPhotoSet && barcodePhotoSet);
+}
+
+function handlePhotoInput(input, preview, content, area, setter) {
+  input.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        preview.src = ev.target.result;
+        preview.classList.add('show');
+        content.style.display = 'none';
+        area.classList.add('has-photo');
+        setter(true);
+        validateStoreForm();
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  });
+}
+
+handlePhotoInput(productPhotoInput, productPhotoPreview, productPhotoContent, productPhotoArea, v => { productPhotoSet = v; });
+handlePhotoInput(barcodePhotoInput, barcodePhotoPreview, barcodePhotoContent, barcodePhotoArea, v => { barcodePhotoSet = v; });
+
+submitOrderBtn.addEventListener('click', () => {
+  submitOrderBtn.textContent = 'Отправляется…';
+  submitOrderBtn.disabled = true;
+  setTimeout(() => {
+    showToast('Заявка отправлена! Ожидайте подтверждения в течение 5 минут');
+    submitOrderBtn.textContent = 'Заявка отправлена ✓';
+    submitOrderBtn.style.background = 'linear-gradient(135deg, #14c99a, #0fa882)';
+    submitOrderBtn.style.color = '#fff';
+  }, 1200);
+});
+
+screenEnterHandlers['screen-store-form'] = () => {
+  clearInterval(qrTimerInterval);
+  itemPriceInput.value = '';
+  productPhotoSet = false;
+  barcodePhotoSet = false;
+  productPhotoPreview.classList.remove('show');
+  barcodePhotoPreview.classList.remove('show');
+  productPhotoContent.style.display = '';
+  barcodePhotoContent.style.display = '';
+  productPhotoArea.classList.remove('has-photo');
+  barcodePhotoArea.classList.remove('has-photo');
+  submitOrderBtn.disabled = true;
+  submitOrderBtn.textContent = 'Отправить заявку';
+  submitOrderBtn.style.background = '';
+  submitOrderBtn.style.color = '';
+};
+
 // --- Sadaqa: category filter ---
 document.querySelectorAll('.sadaqa-cat').forEach(btn => {
   btn.addEventListener('click', () => {
