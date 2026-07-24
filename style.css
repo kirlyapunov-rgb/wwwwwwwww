@@ -89,6 +89,112 @@ html, body {
   pointer-events: auto;
 }
 
+/* ---------- WELCOME / PHONE SCREEN ---------- */
+.welcome-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 32px;
+  gap: 0;
+}
+
+.welcome-logo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 36px;
+}
+
+.welcome-logo-mark {
+  width: 76px;
+  height: 76px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #1a2f3a 0%, #0d2520 100%);
+  border: 1px solid rgba(212,153,26,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow:
+    0 16px 40px -12px rgba(0,0,0,0.35),
+    0 0 0 6px rgba(212,153,26,0.06);
+}
+
+.welcome-brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 36px;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.welcome-tagline {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.welcome-divider {
+  width: 40px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold), var(--teal));
+  margin-bottom: 36px;
+  opacity: 0.6;
+}
+
+.welcome-phone-area {
+  width: 100%;
+  text-align: center;
+}
+
+.welcome-phone-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 14px;
+}
+
+.phone-open-input {
+  width: 100%;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid var(--border-strong) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-align: center;
+  font-family: var(--font-display) !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  letter-spacing: 3px !important;
+  padding: 8px 0 16px !important;
+  color: var(--text-primary) !important;
+  transition: border-color 0.2s ease !important;
+  display: block;
+}
+.phone-open-input::placeholder {
+  color: var(--border-strong) !important;
+  letter-spacing: 2px;
+}
+.phone-open-input:focus {
+  outline: none !important;
+  border-bottom-color: var(--gold) !important;
+  box-shadow: none !important;
+}
+
+.welcome-phone-hint {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 /* ---------- PRAYER TIMES MODAL ---------- */
 .prayer-list {
   list-style: none;
