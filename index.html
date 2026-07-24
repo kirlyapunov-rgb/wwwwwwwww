@@ -67,14 +67,17 @@
     <!-- SCREEN 3: MY ID / BIOMETRICS -->
     <section class="screen" id="screen-myid">
       <header class="screen-header">
-        <button class="back-btn" data-nav="screen-idform" aria-label="Назад">
+        <button class="back-btn" data-nav="screen-otp" aria-label="Назад">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="steps">
           <span class="dot done"></span>
+          <span class="dot done"></span>
           <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
-        <span class="step-label">Шаг 2 из 2</span>
+        <span class="step-label">Шаг 3 из 5</span>
       </header>
 
       <div class="screen-body myid-body">
@@ -97,7 +100,7 @@
 
       <div class="screen-footer">
         <button class="btn btn-primary" id="btn-scan">Начать сканирование</button>
-        <button class="btn btn-primary btn-hidden" id="btn-continue-2" data-nav="screen-offer">Продолжить</button>
+        <button class="btn btn-primary btn-hidden" id="btn-continue-2" data-nav="screen-password">Продолжить</button>
       </div>
     </section>
 
@@ -211,7 +214,7 @@
       </div>
 
       <div class="screen-footer">
-        <button class="btn btn-primary" id="btn-otp-confirm" data-nav="screen-password" disabled>Подтвердить</button>
+        <button class="btn btn-primary" id="btn-otp-confirm" data-nav="screen-myid" disabled>Подтвердить</button>
       </div>
     </section>
 
