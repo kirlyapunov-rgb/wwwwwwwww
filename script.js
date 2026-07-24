@@ -638,3 +638,148 @@ document.querySelectorAll('.sadaqa-donate-btn').forEach(btn => {
     showToast(`Джазакаллаху хайран! Перевод в «${btn.dataset.donate}» отправлен`);
   });
 });
+
+// ════════════════════════════════════════
+// INSTALLMENT ACTIVE STATE (client side)
+// ════════════════════════════════════════
+let installmentActive = false;
+let clientConfirmed = false;
+
+screenEnterHandlers['screen-installment'] = () => {
+  const emptyDiv = document.getElementById('installment-empty');
+  const activeDiv = document.getElementById('installment-active');
+  if (installmentActive) {
+    emptyDiv.style.display = 'none';
+    activeDiv.style.display = '';
+    const badge = document.getElementById('installment-status-badge');
+    const confirmBtn = document.getElementById('btn-confirm-installment');
+    if (clientConfirmed) {
+      badge.className = 'inst-status-badge active';
+      badge.innerHTML = '<span class="inst-badge-dot"></span>Активна';
+      confirmBtn.textContent = 'Принято ✓';
+      confirmBtn.disabled = true;
+      confirmBtn.style.background = 'linear-gradient(135deg, #14c99a, #0fa882)';
+      confirmBtn.style.color = '#fff';
+    } else {
+      badge.className = 'inst-status-badge pending';
+      badge.innerHTML = '<span class="inst-badge-dot"></span>Оформление';
+      confirmBtn.textContent = 'Подтвердить условия рассрочки';
+      confirmBtn.disabled = false;
+      confirmBtn.style.background = '';
+      confirmBtn.style.color = '';
+    }
+  } else {
+    emptyDiv.style.display = '';
+    activeDiv.style.display = 'none';
+  }
+};
+
+document.getElementById('btn-confirm-installment').addEventListener('click', () => {
+  clientConfirmed = true;
+  const badge = document.getElementById('installment-status-badge');
+  badge.className = 'inst-status-badge active';
+  badge.innerHTML = '<span class="inst-badge-dot"></span>Активна';
+  const confirmBtn = document.getElementById('btn-confirm-installment');
+  confirmBtn.textContent = 'Принято ✓';
+  confirmBtn.disabled = true;
+  confirmBtn.style.background = 'linear-gradient(135deg, #14c99a, #0fa882)';
+  confirmBtn.style.color = '#fff';
+  showToast('Рассрочка подтверждена! Можете забрать товар в магазине');
+});
+
+// ════════════════════════════════════════
+// MERCHANT APP
+// ════════════════════════════════════════
+
+// --- Merch home: show notification card when there's a pending client request ---
+screenEnterHandlers['screen-merch-home'] = () => {
+  const notifCard = document.getElementById('merch-notif-card');
+  notifCard.style.display = applicationPending ? 'flex' : 'none';
+};
+
+// Tap on notification card → incoming screen
+document.getElementById('merch-notif-card').addEventListener('click', () => {
+  showScreen('screen-merch-incoming');
+});
+
+// --- Merch new application form ---
+const merchPhoneInput = document.getElementById('merch-phone');
+const btnMerchSubmit = document.getElementById('btn-merch-submit');
+const merchProductPhotoInput = document.getElementById('merch-product-photo-input');
+const merchBarcodePhotoInput = document.getElementById('merch-barcode-photo-input');
+const merchProductPhotoPreview = document.getElementById('merch-product-photo-preview');
+const merchBarcodePhotoPreview = document.getElementById('merch-barcode-photo-preview');
+const merchProductPhotoContent = document.getElementById('merch-product-photo-content');
+const merchBarcodePhotoContent = document.getElementById('merch-barcode-photo-content');
+const merchProductPhotoArea = document.getElementById('merch-product-photo-area');
+const merchBarcodePhotoArea = document.getElementById('merch-barcode-photo-area');
+let merchProductPhotoSet = false;
+let merchBarcodePhotoSet = false;
+
+function validateMerchForm() {
+  const phoneOk = /^\d{4}$/.test(merchPhoneInput.value.trim());
+  btnMerchSubmit.disabled = !(phoneOk && merchProductPhotoSet && merchBarcodePhotoSet);
+}
+
+merchPhoneInput.addEventListener('input', () => {
+  merchPhoneInput.value = merchPhoneInput.value.replace(/\D/g, '').slice(0, 4);
+  validateMerchForm();
+});
+
+handlePhotoInput(
+  merchProductPhotoInput, merchProductPhotoPreview,
+  merchProductPhotoContent, merchProductPhotoArea,
+  v => { merchProductPhotoSet = v; validateMerchForm(); }
+);
+handlePhotoInput(
+  merchBarcodePhotoInput, merchBarcodePhotoPreview,
+  merchBarcodePhotoContent, merchBarcodePhotoArea,
+  v => { merchBarcodePhotoSet = v; validateMerchForm(); }
+);
+
+btnMerchSubmit.addEventListener('click', () => {
+  btnMerchSubmit.textContent = 'Отправляется…';
+  btnMerchSubmit.disabled = true;
+  setTimeout(() => {
+    showToast('Заявка отправлена клиенту!');
+    showScreen('screen-merch-new-pending');
+  }, 1200);
+});
+
+screenEnterHandlers['screen-merch-new-form'] = () => {
+  merchPhoneInput.value = '';
+  merchProductPhotoSet = false;
+  merchBarcodePhotoSet = false;
+  merchProductPhotoPreview.classList.remove('show');
+  merchBarcodePhotoPreview.classList.remove('show');
+  merchProductPhotoContent.style.display = '';
+  merchBarcodePhotoContent.style.display = '';
+  merchProductPhotoArea.classList.remove('has-photo');
+  merchBarcodePhotoArea.classList.remove('has-photo');
+  btnMerchSubmit.textContent = 'Отправить заявку';
+  btnMerchSubmit.disabled = true;
+};
+
+// --- Merch incoming: confirm / reject ---
+document.getElementById('btn-merch-confirm-app').addEventListener('click', () => {
+  installmentActive = true;
+  applicationPending = false; // clear notification badge
+  showToast('Заявка подтверждена! Ожидаем клиента');
+  showScreen('screen-merch-waiting');
+});
+
+document.getElementById('btn-merch-reject-app').addEventListener('click', () => {
+  applicationPending = false;
+  showToast('Заявка отклонена');
+  showScreen('screen-merch-home');
+});
+
+// --- Merch ship goods ---
+document.getElementById('btn-ship-goods').addEventListener('click', () => {
+  document.getElementById('btn-ship-goods').textContent = 'Отгружается…';
+  document.getElementById('btn-ship-goods').disabled = true;
+  setTimeout(() => {
+    showToast('Товар отгружен! Средства поступят в течение 1 рабочего дня');
+    showScreen('screen-merch-done');
+  }, 1000);
+});
