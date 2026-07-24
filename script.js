@@ -717,12 +717,14 @@ let merchProductPhotoSet = false;
 let merchBarcodePhotoSet = false;
 
 function validateMerchForm() {
-  const phoneOk = /^\d{4}$/.test(merchPhoneInput.value.trim());
+  const digits = merchPhoneInput.value.replace(/\D/g, '');
+  const phoneOk = digits.length === 12;
   btnMerchSubmit.disabled = !(phoneOk && merchProductPhotoSet && merchBarcodePhotoSet);
 }
 
 merchPhoneInput.addEventListener('input', () => {
-  merchPhoneInput.value = merchPhoneInput.value.replace(/\D/g, '').slice(0, 4);
+  merchPhoneInput.value = formatPhone(merchPhoneInput.value);
+  merchPhoneInput.setSelectionRange(merchPhoneInput.value.length, merchPhoneInput.value.length);
   validateMerchForm();
 });
 
@@ -747,7 +749,7 @@ btnMerchSubmit.addEventListener('click', () => {
 });
 
 screenEnterHandlers['screen-merch-new-form'] = () => {
-  merchPhoneInput.value = '';
+  merchPhoneInput.value = '+998';
   merchProductPhotoSet = false;
   merchBarcodePhotoSet = false;
   merchProductPhotoPreview.classList.remove('show');
