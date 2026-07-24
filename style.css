@@ -2229,3 +2229,21 @@ html, body {
   text-align: center;
 }
 .merch-phone-wrap input:focus { outline: none; }
+
+/* Merch history banner */
+.merch-history-banner {
+  background: linear-gradient(135deg, rgba(15,168,130,0.08), rgba(212,153,26,0.06));
+  border: 1.5px solid rgba(15,168,130,0.2);
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.merch-history-banner-col { flex: 1; }
+.merch-history-divider {
+  width: 1px;
+  height: 44px;
+  background: var(--border-strong);
+  margin: 0 20px;
+}
