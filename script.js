@@ -762,6 +762,25 @@ screenEnterHandlers['screen-merch-new-form'] = () => {
   btnMerchSubmit.disabled = true;
 };
 
+// --- Merch new-pending: simulate incoming push after delay ---
+let _merchPushTimer = null;
+const merchPushBanner = document.getElementById('merch-push-banner');
+
+screenEnterHandlers['screen-merch-new-pending'] = () => {
+  merchPushBanner.classList.remove('show');
+  clearTimeout(_merchPushTimer);
+  _merchPushTimer = setTimeout(() => {
+    applicationPending = true;
+    merchPushBanner.classList.add('show');
+  }, 3000);
+};
+
+merchPushBanner.addEventListener('click', () => {
+  merchPushBanner.classList.remove('show');
+  clearTimeout(_merchPushTimer);
+  showScreen('screen-merch-incoming');
+});
+
 // --- Merch incoming: confirm / reject ---
 document.getElementById('btn-merch-confirm-app').addEventListener('click', () => {
   installmentActive = true;

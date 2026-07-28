@@ -2298,6 +2298,65 @@ html, body {
 .btn-ship:hover { transform: translateY(-2px); }
 .btn-ship:active { transform: scale(0.96); }
 
+/* Merch push notification banner */
+.merch-push-banner {
+  position: absolute;
+  top: 60px;
+  left: 16px;
+  right: 16px;
+  background: rgba(30,40,38,0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  cursor: pointer;
+  z-index: 200;
+  transform: translateY(-120px);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.34,1.3,0.64,1), opacity 0.3s ease;
+}
+.merch-push-banner.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+.merch-push-app-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(145deg,#1a2f3a,#0d2520);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.merch-push-text {
+  flex: 1;
+  min-width: 0;
+}
+.merch-push-app {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.3px;
+}
+.merch-push-msg {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1.4;
+  margin-top: 1px;
+}
+.merch-push-time {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
 /* Merch phone half-input */
 .merch-phone-wrap {
   display: flex;
