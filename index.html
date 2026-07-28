@@ -434,73 +434,53 @@
       </nav>
     </section>
 
-    <!-- SCREEN INSTALLMENTS -->
+    <!-- SCREEN INSTALLMENTS (list) -->
     <section class="screen" id="screen-installment">
       <div class="screen-body home-body">
+        <h2 class="screen-title">Рассрочка</h2>
 
-        <!-- Empty state (default) -->
+        <!-- Pending request (client submitted, waiting for merchant to accept) -->
+        <div id="installment-requests-section" style="display:none;">
+          <h3 class="section-label">Заявки</h3>
+          <button class="inst-list-item" data-nav="screen-installment-request">
+            <div class="inst-list-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="#d4991a" stroke-width="1.5"/><path d="M10 6V10L12.5 12" stroke="#d4991a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="inst-list-info">
+              <div class="inst-list-title">В обработке</div>
+              <div class="inst-list-sub" id="inst-list-request-store">Texnomart — Чиланзар</div>
+            </div>
+            <div class="inst-list-right">
+              <span class="inst-list-timer" id="inst-list-timer">15:00</span>
+              <span class="inst-list-arrow">›</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Active installments (merchant confirmed and filled product info) -->
+        <div id="installment-active-section" style="display:none;">
+          <h3 class="section-label">Активные</h3>
+          <button class="inst-list-item" data-nav="screen-installment-active">
+            <div class="inst-list-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" opacity="0.8"><rect x="3" y="4" width="14" height="12" rx="2" stroke="#0fa882" stroke-width="1.5"/><path d="M7 16V18" stroke="#0fa882" stroke-width="1.5" stroke-linecap="round"/><path d="M13 16V18" stroke="#0fa882" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="inst-list-info">
+              <div class="inst-list-title" id="inst-list-name">Телевизор Samsung 55" QLED</div>
+              <div class="inst-list-sub" id="inst-list-price">1 200 000 сум · 6 мес</div>
+            </div>
+            <div class="inst-list-right">
+              <span id="inst-list-badge" class="inst-status-badge pending"><span class="inst-badge-dot"></span>Оформление</span>
+              <span class="inst-list-arrow">›</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Empty state -->
         <div id="installment-empty">
-          <h2 class="screen-title">Рассрочка</h2>
           <div class="empty-state-block">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="6" y="9" width="28" height="24" rx="4" stroke="#0fa882" stroke-width="1.6" opacity="0.7"/><path d="M6 16H34" stroke="#0fa882" stroke-width="1.6" opacity="0.7"/><path d="M13 23H27" stroke="#0fa882" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/><path d="M13 27H21" stroke="#0fa882" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/></svg>
             <p>У вас пока нет активных рассрочек</p>
           </div>
-        </div>
-
-        <!-- Active installment (shown after merchant confirms) -->
-        <div id="installment-active" style="display:none;">
-          <div class="inst-status-row">
-            <h2 class="screen-title" style="margin-bottom:0;">Рассрочка</h2>
-            <span id="installment-status-badge" class="inst-status-badge pending">
-              <span class="inst-badge-dot"></span>Оформление
-            </span>
-          </div>
-
-          <!-- Product card -->
-          <div class="inst-card">
-            <div class="inst-product-img">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" opacity="0.4"><rect x="4" y="6" width="32" height="22" rx="3" stroke="#0fa882" stroke-width="1.8"/><path d="M16 28V34" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M24 28V34" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M10 34H30" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </div>
-            <div class="inst-product-info">
-              <p class="inst-product-name">Телевизор Samsung 55" QLED</p>
-              <p class="inst-product-store">Texnomart — Чиланзар</p>
-              <span class="inst-price">1 200 000</span><span class="inst-price-label">сум · 6 мес</span>
-            </div>
-          </div>
-
-          <!-- Payment schedule -->
-          <div class="payment-schedule">
-            <div class="payment-schedule-header">
-              <span class="payment-schedule-title">График платежей</span>
-              <span class="payment-schedule-term">200 000 сум / мес</span>
-            </div>
-            <div class="payment-row">
-              <div><div class="payment-month">Август 2026</div><div class="payment-date">10.08.2026</div></div>
-              <div class="payment-amount">200 000 сум</div>
-            </div>
-            <div class="payment-row">
-              <div><div class="payment-month">Сентябрь 2026</div><div class="payment-date">10.09.2026</div></div>
-              <div class="payment-amount">200 000 сум</div>
-            </div>
-            <div class="payment-row">
-              <div><div class="payment-month">Октябрь 2026</div><div class="payment-date">10.10.2026</div></div>
-              <div class="payment-amount">200 000 сум</div>
-            </div>
-            <div class="payment-row">
-              <div><div class="payment-month">Ноябрь 2026</div><div class="payment-date">10.11.2026</div></div>
-              <div class="payment-amount">200 000 сум</div>
-            </div>
-            <div class="payment-row">
-              <div><div class="payment-month">Декабрь 2026</div><div class="payment-date">10.12.2026</div></div>
-              <div class="payment-amount">200 000 сум</div>
-            </div>
-            <div class="payment-row">
-              <div><div class="payment-month">Январь 2027</div><div class="payment-date">10.01.2027</div></div>
-              <div class="payment-amount">200 000 сум</div>
-            </div>
-          </div>
-
-          <button class="btn btn-primary" id="btn-confirm-installment" style="width:100%;">Подтвердить условия рассрочки</button>
         </div>
 
       </div>
@@ -519,6 +499,68 @@
           <span>Садака</span>
         </button>
       </nav>
+    </section>
+
+    <!-- SCREEN INSTALLMENT REQUEST DETAIL (заявка в обработке) -->
+    <section class="screen" id="screen-installment-request">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-installment" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="qr-screen-title">Заявка на рассрочку</span>
+        <div style="width:34px"></div>
+      </header>
+      <div class="screen-body">
+        <div class="inst-request-card">
+          <div class="inst-request-top">
+            <span class="inst-status-badge pending"><span class="inst-badge-dot"></span>В обработке</span>
+            <span class="inst-request-timer" id="inst-request-timer">15:00</span>
+          </div>
+          <p class="inst-request-store" id="inst-request-store">Texnomart — Чиланзар</p>
+          <p class="inst-request-sub">Магазин должен принять заявку в течение 15 минут, иначе она автоматически отменится</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN INSTALLMENT ACTIVE DETAIL -->
+    <section class="screen" id="screen-installment-active">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-installment" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="qr-screen-title">Рассрочка</span>
+        <div style="width:34px"></div>
+      </header>
+      <div class="screen-body" style="overflow-y:auto;">
+        <div class="inst-status-row" style="justify-content:flex-end;">
+          <span id="installment-status-badge" class="inst-status-badge pending">
+            <span class="inst-badge-dot"></span>Оформление
+          </span>
+        </div>
+
+        <!-- Product card -->
+        <div class="inst-card">
+          <div class="inst-product-img">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" opacity="0.4"><rect x="4" y="6" width="32" height="22" rx="3" stroke="#0fa882" stroke-width="1.8"/><path d="M16 28V34" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M24 28V34" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M10 34H30" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <div class="inst-product-info">
+            <p class="inst-product-name" id="inst-product-name">Телевизор Samsung 55" QLED</p>
+            <p class="inst-product-store">Texnomart — Чиланзар</p>
+            <span class="inst-price" id="inst-price">1 200 000</span><span class="inst-price-label" id="inst-term-label">сум · 6 мес</span>
+          </div>
+        </div>
+
+        <!-- Payment schedule -->
+        <div class="payment-schedule">
+          <div class="payment-schedule-header">
+            <span class="payment-schedule-title">График платежей</span>
+            <span class="payment-schedule-term" id="payment-schedule-term-label">200 000 сум / мес</span>
+          </div>
+          <div id="payment-schedule-rows"></div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-confirm-installment" style="width:100%;">Подтвердить условия рассрочки</button>
+      </div>
     </section>
 
     <!-- SCREEN SADAQA -->
@@ -862,12 +904,14 @@
         <h2 class="screen-title">Заявка на рассрочку</h2>
         <p class="screen-sub" style="margin-bottom:20px;">Заполните данные о товаре для оформления рассрочки</p>
 
-        <!-- Price -->
+        <!-- Installment term -->
         <div class="field">
-          <label for="item-price">Стоимость товара</label>
-          <div class="price-input-wrap">
-            <input type="text" id="item-price" placeholder="0" inputmode="numeric" autocomplete="off">
-            <span class="price-suffix">сум</span>
+          <label>Срок рассрочки</label>
+          <div class="term-select" id="term-select">
+            <button type="button" class="term-btn" data-term="3">3 мес</button>
+            <button type="button" class="term-btn active" data-term="6">6 мес</button>
+            <button type="button" class="term-btn" data-term="9">9 мес</button>
+            <button type="button" class="term-btn" data-term="12">12 мес</button>
           </div>
         </div>
 
@@ -925,21 +969,30 @@
             <div class="merch-logo-sub">Texnomart — Чиланзар</div>
           </div>
         </div>
-        <span class="merch-badge-role">Магазин</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="bell-btn" id="merch-bell-btn" aria-label="Входящие заявки">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 13.5C4 13.5 3.2 13.5 3.2 12.7C3.2 12 4 11.8 4 9.5C4 6.5 5.8 4.5 9 4.5C12.2 4.5 14 6.5 14 9.5C14 11.8 14.8 12 14.8 12.7C14.8 13.5 14 13.5 14 13.5H4Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M7.3 15.5C7.7 16.1 8.3 16.4 9 16.4C9.7 16.4 10.3 16.1 10.7 15.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span class="bell-dot hidden" id="merch-bell-dot"></span>
+          </button>
+          <span class="merch-badge-role">Магазин</span>
+        </div>
       </div>
 
       <div class="merch-body">
-        <!-- Incoming application notification (shown when client has pending request) -->
-        <div class="merch-notif-card" id="merch-notif-card" style="display:none;" id="merch-notif-tap">
-          <div class="merch-notif-icon">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 16.5C5 16.5 4 16.5 4 15.5C4 14.5 5 14 5 11.5C5 8.5 7 6.5 10 6.5C13 6.5 15 8.5 15 11.5C15 14 16 14.5 16 15.5C16 16.5 15 16.5 15 16.5H5Z" stroke="#0fa882" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.5 18C8.9 18.5 9.4 18.8 10 18.8C10.6 18.8 11.1 18.5 11.5 18" stroke="#0fa882" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="4.5" r="1.5" fill="#0fa882"/></svg>
+        <!-- Incoming applications section (shown when there's a pending client request) -->
+        <div class="merch-incoming-section" id="merch-incoming-section" style="display:none;">
+          <div class="merch-section-label">Входящие заявки</div>
+          <div class="merch-notif-card" id="merch-notif-card">
+            <div class="merch-notif-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 16.5C5 16.5 4 16.5 4 15.5C4 14.5 5 14 5 11.5C5 8.5 7 6.5 10 6.5C13 6.5 15 8.5 15 11.5C15 14 16 14.5 16 15.5C16 16.5 15 16.5 15 16.5H5Z" stroke="#0fa882" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.5 18C8.9 18.5 9.4 18.8 10 18.8C10.6 18.8 11.1 18.5 11.5 18" stroke="#0fa882" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="4.5" r="1.5" fill="#0fa882"/></svg>
+            </div>
+            <div class="merch-notif-body">
+              <div class="merch-notif-label">Новая заявка</div>
+              <div class="merch-notif-title" id="merch-notif-phone">+998 90 ···· 4412</div>
+              <div class="merch-notif-sub">Фото товара и штрих-кода готовы — проверьте заявку</div>
+            </div>
+            <div class="merch-notif-pulse"></div>
           </div>
-          <div class="merch-notif-body">
-            <div class="merch-notif-label">Новая заявка</div>
-            <div class="merch-notif-title">Заявка от покупателя</div>
-            <div class="merch-notif-sub">Клиент оформил рассрочку — проверьте и подтвердите</div>
-          </div>
-          <div class="merch-notif-pulse"></div>
         </div>
 
         <!-- Stats -->
@@ -955,12 +1008,6 @@
             <div class="merch-stat-sub">сум сегодня</div>
           </div>
         </div>
-
-        <!-- New application button -->
-        <button class="merch-new-btn" data-nav="screen-merch-new-form">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3V15M3 9H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Открыть новую заявку
-        </button>
       </div>
 
       <nav class="bottom-tabbar merch-tabbar">
@@ -968,8 +1015,10 @@
           <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V16.5C17 17.05 16.55 17.5 16 17.5H4C3.45 17.5 3 17.05 3 16.5V9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
           <span>Главная</span>
         </button>
-        <button class="tab-btn" data-nav="screen-merch-new-form">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5V13.5M6.5 10H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <button class="tab-btn tab-btn-fab" data-nav="screen-merch-new-form">
+          <span class="tab-fab-circle">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3.5V16.5M3.5 10H16.5" stroke="#23180a" stroke-width="2.2" stroke-linecap="round"/></svg>
+          </span>
           <span>Новая</span>
         </button>
         <button class="tab-btn" data-nav="screen-merch-history">
@@ -1051,8 +1100,10 @@
           <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V16.5C17 17.05 16.55 17.5 16 17.5H4C3.45 17.5 3 17.05 3 16.5V9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
           <span>Главная</span>
         </button>
-        <button class="tab-btn" data-nav="screen-merch-new-form">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5V13.5M6.5 10H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <button class="tab-btn tab-btn-fab" data-nav="screen-merch-new-form">
+          <span class="tab-fab-circle">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3.5V16.5M3.5 10H16.5" stroke="#23180a" stroke-width="2.2" stroke-linecap="round"/></svg>
+          </span>
           <span>Новая</span>
         </button>
         <button class="tab-btn active" data-nav="screen-merch-history">
@@ -1160,16 +1211,18 @@
       </header>
 
       <div class="screen-body">
-        <p class="screen-sub" style="margin-bottom:16px;">Покупатель оформил заявку на рассрочку. Проверьте данные и подтвердите или отклоните.</p>
+        <p class="screen-sub" style="margin-bottom:16px;">Покупатель оформил заявку на рассрочку. Проверьте фото товара и штрих-кода, затем дополните информацию о товаре.</p>
 
         <div class="merch-incoming-card">
-          <div class="merch-incoming-img">
-            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" opacity="0.5"><rect x="4" y="6" width="30" height="20" rx="3" stroke="#0fa882" stroke-width="1.8"/><path d="M14 26V32" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M24 26V32" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M8 32H30" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <p style="font-size:11.5px;color:var(--text-muted);font-weight:600;">Фото товара от клиента</p>
-          </div>
-          <div class="merch-detail-row">
-            <span class="merch-detail-label">Сумма рассрочки</span>
-            <span class="merch-detail-value price-big">1 200 000 сум</span>
+          <div style="display:flex;">
+            <div class="merch-incoming-img" style="flex:1;border-right:1px solid var(--border);">
+              <svg width="34" height="34" viewBox="0 0 38 38" fill="none" opacity="0.5"><rect x="4" y="6" width="30" height="20" rx="3" stroke="#0fa882" stroke-width="1.8"/><path d="M14 26V32" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M24 26V32" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/><path d="M8 32H30" stroke="#0fa882" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <p style="font-size:11px;color:var(--text-muted);font-weight:600;text-align:center;">Фото товара</p>
+            </div>
+            <div class="merch-incoming-img" style="flex:1;">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" opacity="0.5"><rect x="3" y="5" width="2" height="14" rx="0.6" fill="#0fa882"/><rect x="7" y="5" width="1" height="14" rx="0.4" fill="#0fa882"/><rect x="10" y="5" width="3" height="14" rx="0.6" fill="#0fa882"/><rect x="15" y="5" width="1" height="14" rx="0.4" fill="#0fa882"/><rect x="18" y="5" width="2" height="14" rx="0.6" fill="#0fa882"/><rect x="22" y="5" width="1" height="14" rx="0.4" fill="#0fa882"/></svg>
+              <p style="font-size:11px;color:var(--text-muted);font-weight:600;text-align:center;">Фото штрих-кода</p>
+            </div>
           </div>
           <div class="merch-detail-row">
             <span class="merch-detail-label">Клиент</span>
@@ -1177,11 +1230,7 @@
           </div>
           <div class="merch-detail-row">
             <span class="merch-detail-label">Срок рассрочки</span>
-            <span class="merch-detail-value">6 месяцев</span>
-          </div>
-          <div class="merch-detail-row">
-            <span class="merch-detail-label">Штрих-код</span>
-            <span class="merch-detail-value" style="font-family:monospace;">4600123456789</span>
+            <span class="merch-detail-value" id="merch-incoming-term">6 месяцев</span>
           </div>
           <div class="merch-detail-row">
             <span class="merch-detail-label">Заявка</span>
@@ -1192,9 +1241,52 @@
 
       <div class="screen-footer">
         <div class="merch-action-row">
-          <button class="btn-merch-confirm-app" id="btn-merch-confirm-app">Подтвердить</button>
+          <button class="btn-merch-confirm-app" id="btn-merch-fill-info">Дополнить информацию</button>
           <button class="btn-merch-reject-app" id="btn-merch-reject-app">Отклонить</button>
         </div>
+      </div>
+    </section>
+
+    <!-- MERCH FILL PRODUCT INFO -->
+    <section class="screen" id="screen-merch-fill-info">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-merch-incoming" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="qr-screen-title">Данные о товаре</span>
+        <div style="width:34px"></div>
+      </header>
+
+      <div class="screen-body">
+        <p class="screen-sub" style="margin-bottom:20px;">Заполните карточку товара по фото, присланным клиентом</p>
+
+        <div class="field">
+          <label for="merch-item-name">Название товара</label>
+          <input type="text" id="merch-item-name" placeholder="Например, Смартфон Samsung Galaxy A55" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="merch-item-category">Категория</label>
+          <input type="text" id="merch-item-category" placeholder="Например, Электроника" autocomplete="off">
+        </div>
+
+        <!-- Price -->
+        <div class="field">
+          <label for="merch-item-price">Стоимость товара</label>
+          <div class="price-input-wrap">
+            <input type="text" id="merch-item-price" placeholder="0" inputmode="numeric" autocomplete="off">
+            <span class="price-suffix">сум</span>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:8px;">
+          <label for="merch-item-marking">Маркировка (OKPU-код / QR-метка)</label>
+          <input type="text" id="merch-item-marking" placeholder="Код с коробки товара" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-merch-fill-submit" disabled>Подтвердить заявку</button>
       </div>
     </section>
 
@@ -1387,6 +1479,8 @@
     <button class="devnav-btn" data-goto="screen-pin">4. Пин-код</button>
     <button class="devnav-btn" data-goto="screen-home">5. Главная</button>
     <button class="devnav-btn" data-goto="screen-installment">6. Рассрочка</button>
+    <button class="devnav-btn" data-goto="screen-installment-request">6а. Заявка (детали)</button>
+    <button class="devnav-btn" data-goto="screen-installment-active">6б. Активная (детали)</button>
     <button class="devnav-btn" data-goto="screen-sadaqa">7. Садака</button>
     <button class="devnav-btn" data-goto="screen-card">8. Карта</button>
     <button class="devnav-btn" data-goto="screen-loader">9. Лоудер</button>
@@ -1397,6 +1491,7 @@
     <button class="devnav-btn" data-goto="screen-merch-new-form">М1. Новая</button>
     <button class="devnav-btn" data-goto="screen-merch-new-pending">М2. В ожидании</button>
     <button class="devnav-btn" data-goto="screen-merch-incoming">М3. Входящая</button>
+    <button class="devnav-btn" data-goto="screen-merch-fill-info">М3б. Данные о товаре</button>
     <button class="devnav-btn" data-goto="screen-merch-waiting">М4. Ждёт клиента</button>
     <button class="devnav-btn" data-goto="screen-merch-ready">М5. Готов к выдаче</button>
     <button class="devnav-btn" data-goto="screen-merch-done">М6. Отгружено</button>

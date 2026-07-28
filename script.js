@@ -539,7 +539,6 @@ screenEnterHandlers['screen-qr'] = () => {
 };
 
 // --- Store form screen ---
-const itemPriceInput = document.getElementById('item-price');
 const submitOrderBtn = document.getElementById('btn-submit-order');
 const productPhotoInput = document.getElementById('product-photo-input');
 const barcodePhotoInput = document.getElementById('barcode-photo-input');
@@ -553,18 +552,8 @@ const barcodePhotoContent = document.getElementById('barcode-photo-content');
 let productPhotoSet = false;
 let barcodePhotoSet = false;
 
-function formatPrice(val) {
-  return val.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-}
-
-itemPriceInput.addEventListener('input', () => {
-  itemPriceInput.value = formatPrice(itemPriceInput.value);
-  validateStoreForm();
-});
-
 function validateStoreForm() {
-  const priceOk = itemPriceInput.value.replace(/\D/g, '').length > 0;
-  submitOrderBtn.disabled = !(priceOk && productPhotoSet && barcodePhotoSet);
+  submitOrderBtn.disabled = !(productPhotoSet && barcodePhotoSet);
 }
 
 function handlePhotoInput(input, preview, content, area, setter) {
@@ -587,12 +576,23 @@ function handlePhotoInput(input, preview, content, area, setter) {
 handlePhotoInput(productPhotoInput, productPhotoPreview, productPhotoContent, productPhotoArea, v => { productPhotoSet = v; });
 handlePhotoInput(barcodePhotoInput, barcodePhotoPreview, barcodePhotoContent, barcodePhotoArea, v => { barcodePhotoSet = v; });
 
+// --- Store form: installment term select ---
+document.querySelectorAll('#term-select .term-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#term-select .term-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTerm = parseInt(btn.dataset.term, 10);
+  });
+});
+
 submitOrderBtn.addEventListener('click', () => {
   submitOrderBtn.textContent = 'Отправляется…';
   submitOrderBtn.disabled = true;
   setTimeout(() => {
     applicationPending = true;
+    startRequestTimer();
     document.getElementById('pending-store-name').textContent = currentStore;
+    document.getElementById('merch-incoming-term').textContent = `${currentTerm} месяцев`;
     showToast('Заявка отправлена! Ожидайте подтверждения');
     showScreen('screen-home');
   }, 1200);
@@ -600,7 +600,6 @@ submitOrderBtn.addEventListener('click', () => {
 
 screenEnterHandlers['screen-store-form'] = () => {
   clearInterval(qrTimerInterval);
-  itemPriceInput.value = '';
   productPhotoSet = false;
   barcodePhotoSet = false;
   productPhotoPreview.classList.remove('show');
@@ -613,6 +612,8 @@ screenEnterHandlers['screen-store-form'] = () => {
   submitOrderBtn.textContent = 'Отправить заявку';
   submitOrderBtn.style.background = '';
   submitOrderBtn.style.color = '';
+  currentTerm = 6;
+  document.querySelectorAll('#term-select .term-btn').forEach(b => b.classList.toggle('active', b.dataset.term === '6'));
 };
 
 // --- Sadaqa: category filter ---
@@ -640,22 +641,110 @@ document.querySelectorAll('.sadaqa-donate-btn').forEach(btn => {
 });
 
 // ════════════════════════════════════════
-// INSTALLMENT ACTIVE STATE (client side)
+// INSTALLMENT: REQUESTS (pending) + ACTIVE STATE (client side)
 // ════════════════════════════════════════
 let installmentActive = false;
 let clientConfirmed = false;
+let currentProductName = '';
+let currentProductPrice = '';
+let currentTerm = 6;
 
-screenEnterHandlers['screen-installment'] = () => {
+const REQUEST_TIMEOUT_MS = 15 * 60 * 1000;
+let requestDeadline = null;
+let requestTimerInterval = null;
+
+function startRequestTimer() {
+  requestDeadline = Date.now() + REQUEST_TIMEOUT_MS;
+  clearInterval(requestTimerInterval);
+  updateRequestTimer();
+  requestTimerInterval = setInterval(updateRequestTimer, 1000);
+}
+
+function stopRequestTimer() {
+  clearInterval(requestTimerInterval);
+  requestTimerInterval = null;
+  requestDeadline = null;
+}
+
+function updateRequestTimer() {
+  if (!requestDeadline) return;
+  const msLeft = requestDeadline - Date.now();
+  if (msLeft <= 0) {
+    stopRequestTimer();
+    applicationPending = false;
+    showToast('Заявка отменена — магазин не принял её вовремя');
+    renderInstallmentScreen();
+    screenEnterHandlers['screen-home']();
+    return;
+  }
+  const totalSec = Math.ceil(msLeft / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  const text = `${min}:${String(sec).padStart(2, '0')}`;
+  const timerEl = document.getElementById('inst-request-timer');
+  const listTimerEl = document.getElementById('inst-list-timer');
+  if (timerEl) timerEl.textContent = text;
+  if (listTimerEl) listTimerEl.textContent = text;
+}
+
+const RU_MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+function renderPaymentSchedule(term, priceDigits) {
+  const container = document.getElementById('payment-schedule-rows');
+  if (!container) return;
+  const monthlyAmount = term > 0 ? Math.round(priceDigits / term) : 0;
+  const monthlyLabel = `${formatPrice(String(monthlyAmount))} сум / мес`;
+  document.getElementById('payment-schedule-term-label').textContent = monthlyLabel;
+
+  container.innerHTML = '';
+  let month = 7; // August (0-based index)
+  let year = 2026;
+  for (let i = 0; i < term; i++) {
+    const row = document.createElement('div');
+    row.className = 'payment-row';
+    row.innerHTML = `<div><div class="payment-month">${RU_MONTHS[month]} ${year}</div><div class="payment-date">10.${String(month + 1).padStart(2, '0')}.${year}</div></div><div class="payment-amount">${formatPrice(String(monthlyAmount))} сум</div>`;
+    container.appendChild(row);
+    month++;
+    if (month > 11) { month = 0; year++; }
+  }
+}
+
+function renderInstallmentScreen() {
+  const requestsSection = document.getElementById('installment-requests-section');
+  const activeSection = document.getElementById('installment-active-section');
   const emptyDiv = document.getElementById('installment-empty');
-  const activeDiv = document.getElementById('installment-active');
+
+  const showRequest = applicationPending && !installmentActive;
+  requestsSection.style.display = showRequest ? '' : 'none';
+  activeSection.style.display = installmentActive ? '' : 'none';
+  emptyDiv.style.display = (!showRequest && !installmentActive) ? '' : 'none';
+
+  if (showRequest) {
+    document.getElementById('inst-request-store').textContent = currentStore;
+    document.getElementById('inst-list-request-store').textContent = currentStore;
+    updateRequestTimer();
+  }
+
   if (installmentActive) {
-    emptyDiv.style.display = 'none';
-    activeDiv.style.display = '';
     const badge = document.getElementById('installment-status-badge');
+    const listBadge = document.getElementById('inst-list-badge');
     const confirmBtn = document.getElementById('btn-confirm-installment');
+    const priceDigits = parseInt((currentProductPrice || '').replace(/\D/g, ''), 10) || 0;
+
+    if (currentProductName) {
+      document.getElementById('inst-product-name').textContent = currentProductName;
+      document.getElementById('inst-list-name').textContent = currentProductName;
+    }
+    document.getElementById('inst-price').textContent = currentProductPrice || '0';
+    document.getElementById('inst-term-label').textContent = `сум · ${currentTerm} мес`;
+    document.getElementById('inst-list-price').textContent = `${currentProductPrice || '0'} сум · ${currentTerm} мес`;
+    renderPaymentSchedule(currentTerm, priceDigits);
+
     if (clientConfirmed) {
       badge.className = 'inst-status-badge active';
       badge.innerHTML = '<span class="inst-badge-dot"></span>Активна';
+      listBadge.className = 'inst-status-badge active';
+      listBadge.innerHTML = '<span class="inst-badge-dot"></span>Активна';
       confirmBtn.textContent = 'Принято ✓';
       confirmBtn.disabled = true;
       confirmBtn.style.background = 'linear-gradient(135deg, #14c99a, #0fa882)';
@@ -663,27 +752,23 @@ screenEnterHandlers['screen-installment'] = () => {
     } else {
       badge.className = 'inst-status-badge pending';
       badge.innerHTML = '<span class="inst-badge-dot"></span>Оформление';
+      listBadge.className = 'inst-status-badge pending';
+      listBadge.innerHTML = '<span class="inst-badge-dot"></span>Оформление';
       confirmBtn.textContent = 'Подтвердить условия рассрочки';
       confirmBtn.disabled = false;
       confirmBtn.style.background = '';
       confirmBtn.style.color = '';
     }
-  } else {
-    emptyDiv.style.display = '';
-    activeDiv.style.display = 'none';
   }
-};
+}
+
+screenEnterHandlers['screen-installment'] = renderInstallmentScreen;
+screenEnterHandlers['screen-installment-request'] = renderInstallmentScreen;
+screenEnterHandlers['screen-installment-active'] = renderInstallmentScreen;
 
 document.getElementById('btn-confirm-installment').addEventListener('click', () => {
   clientConfirmed = true;
-  const badge = document.getElementById('installment-status-badge');
-  badge.className = 'inst-status-badge active';
-  badge.innerHTML = '<span class="inst-badge-dot"></span>Активна';
-  const confirmBtn = document.getElementById('btn-confirm-installment');
-  confirmBtn.textContent = 'Принято ✓';
-  confirmBtn.disabled = true;
-  confirmBtn.style.background = 'linear-gradient(135deg, #14c99a, #0fa882)';
-  confirmBtn.style.color = '#fff';
+  renderInstallmentScreen();
   showToast('Рассрочка подтверждена! Можете забрать товар в магазине');
 });
 
@@ -691,15 +776,25 @@ document.getElementById('btn-confirm-installment').addEventListener('click', () 
 // MERCHANT APP
 // ════════════════════════════════════════
 
-// --- Merch home: show notification card when there's a pending client request ---
+// --- Merch home: show incoming applications section when there's a pending client request ---
 screenEnterHandlers['screen-merch-home'] = () => {
-  const notifCard = document.getElementById('merch-notif-card');
-  notifCard.style.display = applicationPending ? 'flex' : 'none';
+  const incomingSection = document.getElementById('merch-incoming-section');
+  incomingSection.style.display = applicationPending ? 'block' : 'none';
+  document.getElementById('merch-bell-dot').classList.toggle('hidden', !applicationPending);
 };
 
 // Tap on notification card → incoming screen
 document.getElementById('merch-notif-card').addEventListener('click', () => {
   showScreen('screen-merch-incoming');
+});
+
+// Tap on bell → incoming screen (if there's something to review)
+document.getElementById('merch-bell-btn').addEventListener('click', () => {
+  if (applicationPending) {
+    showScreen('screen-merch-incoming');
+  } else {
+    showToast('Нет новых заявок');
+  }
 });
 
 // --- Merch new application form ---
@@ -771,6 +866,7 @@ screenEnterHandlers['screen-merch-new-pending'] = () => {
   clearTimeout(_merchPushTimer);
   _merchPushTimer = setTimeout(() => {
     applicationPending = true;
+    startRequestTimer();
     merchPushBanner.classList.add('show');
   }, 3000);
 };
@@ -781,18 +877,66 @@ merchPushBanner.addEventListener('click', () => {
   showScreen('screen-merch-incoming');
 });
 
-// --- Merch incoming: confirm / reject ---
-document.getElementById('btn-merch-confirm-app').addEventListener('click', () => {
-  installmentActive = true;
-  applicationPending = false; // clear notification badge
-  showToast('Заявка подтверждена! Ожидаем клиента');
-  showScreen('screen-merch-waiting');
+// --- Merch incoming: fill info / reject ---
+document.getElementById('btn-merch-fill-info').addEventListener('click', () => {
+  showScreen('screen-merch-fill-info');
 });
 
 document.getElementById('btn-merch-reject-app').addEventListener('click', () => {
   applicationPending = false;
+  stopRequestTimer();
   showToast('Заявка отклонена');
   showScreen('screen-merch-home');
+});
+
+// --- Merch fill product info ---
+const merchItemNameInput = document.getElementById('merch-item-name');
+const merchItemCategoryInput = document.getElementById('merch-item-category');
+const merchItemPriceInput = document.getElementById('merch-item-price');
+const merchItemMarkingInput = document.getElementById('merch-item-marking');
+const btnMerchFillSubmit = document.getElementById('btn-merch-fill-submit');
+
+function formatPrice(val) {
+  return val.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+function validateMerchFillForm() {
+  const nameOk = merchItemNameInput.value.trim().length > 0;
+  const categoryOk = merchItemCategoryInput.value.trim().length > 0;
+  const priceOk = merchItemPriceInput.value.replace(/\D/g, '').length > 0;
+  const markingOk = merchItemMarkingInput.value.trim().length > 0;
+  btnMerchFillSubmit.disabled = !(nameOk && categoryOk && priceOk && markingOk);
+}
+
+merchItemNameInput.addEventListener('input', validateMerchFillForm);
+merchItemCategoryInput.addEventListener('input', validateMerchFillForm);
+merchItemPriceInput.addEventListener('input', () => {
+  merchItemPriceInput.value = formatPrice(merchItemPriceInput.value);
+  validateMerchFillForm();
+});
+merchItemMarkingInput.addEventListener('input', validateMerchFillForm);
+
+screenEnterHandlers['screen-merch-fill-info'] = () => {
+  merchItemNameInput.value = '';
+  merchItemCategoryInput.value = '';
+  merchItemPriceInput.value = '';
+  merchItemMarkingInput.value = '';
+  btnMerchFillSubmit.disabled = true;
+  btnMerchFillSubmit.textContent = 'Подтвердить заявку';
+};
+
+btnMerchFillSubmit.addEventListener('click', () => {
+  btnMerchFillSubmit.textContent = 'Отправляется…';
+  btnMerchFillSubmit.disabled = true;
+  setTimeout(() => {
+    currentProductName = merchItemNameInput.value.trim();
+    currentProductPrice = merchItemPriceInput.value.trim();
+    installmentActive = true;
+    applicationPending = false; // clear notification badge
+    stopRequestTimer();
+    showToast('Заявка подтверждена! Ожидаем клиента');
+    showScreen('screen-merch-waiting');
+  }, 900);
 });
 
 // --- Merch ship goods ---
