@@ -153,8 +153,6 @@ cardRequiredOverlay.addEventListener('click', (e) => {
 cardRequiredCta.addEventListener('click', () => cardRequiredOverlay.classList.remove('show'));
 
 // --- Home screen: toggle widgets by state ---
-let applicationPending = false;
-
 screenEnterHandlers['screen-home'] = () => {
   const emptyWidget = document.getElementById('empty-card-widget');
   const limitWidget = document.getElementById('limit-widget');
@@ -164,7 +162,8 @@ screenEnterHandlers['screen-home'] = () => {
   limitWidget.classList.remove('show');
   pendingWidget.classList.remove('show');
 
-  if (applicationPending) {
+  const clientReq = getClientRequest();
+  if (clientReq && clientReq.status === 'processing') {
     pendingWidget.classList.add('show');
   } else if (cardBound) {
     limitWidget.classList.add('show');
@@ -531,36 +530,87 @@ screenEnterHandlers['screen-pin'] = () => {
   resetPinBoxes();
 };
 
-// --- QR Scanner screen ---
+// --- Data model: every merchant request, whether the client scanned a QR or the merchant typed it in themselves ---
 let currentStore = 'Магазин — Чиланзар';
-let qrTimerInterval = null;
-let docProductPhoto = '';
-let docBarcodePhoto = '';
+const REQUEST_TIMEOUT_MS = 15 * 60 * 1000;
 
-function renderDocPhotos() {
-  const setPhoto = (imgId, fallbackId, captionId, src) => {
-    const img = document.getElementById(imgId);
-    if (!img || !src) return;
+let merchRequests = [];
+let nextRequestId = 1;
+let currentRequestId = null; // which request the open detail screen refers to
+let merchHomeFilter = 'all'; // 'all' | 'self' | 'client'
+
+function getCurrentRequest() {
+  return merchRequests.find(r => r.id === currentRequestId) || null;
+}
+
+// The client app only ever cares about its own (QR-scanned) requests — pick the most recent one.
+function getClientRequest() {
+  const clientReqs = merchRequests.filter(r => r.origin === 'client');
+  return clientReqs[clientReqs.length - 1] || null;
+}
+
+function createRequest(origin, phone) {
+  const req = {
+    id: nextRequestId++,
+    origin, // 'client' | 'self'
+    phone,
+    appNumber: `№АМ-2026-${String(1000 + nextRequestId).slice(-4)}`,
+    status: 'processing', // processing -> awaiting_client -> confirmed
+    term: 6,
+    productName: '',
+    price: '',
+    productPhoto: '',
+    barcodePhoto: '',
+    deadline: Date.now() + REQUEST_TIMEOUT_MS,
+    shipped: false,
+  };
+  merchRequests.push(req);
+  return req;
+}
+
+function removeRequest(id) {
+  merchRequests = merchRequests.filter(r => r.id !== id);
+}
+
+function setPhotoEl(imgId, fallbackId, src) {
+  const img = document.getElementById(imgId);
+  if (!img) return;
+  if (src) {
     img.src = src;
     img.style.display = 'block';
-    const fallback = fallbackId && document.getElementById(fallbackId);
-    if (fallback) fallback.style.display = 'none';
-    const caption = captionId && document.getElementById(captionId);
-    if (caption) caption.style.display = 'none';
-  };
-  setPhoto('inst-product-photo', 'inst-product-icon-fallback', null, docProductPhoto);
-  setPhoto('merch-incoming-product-photo', 'merch-incoming-product-icon-fallback', 'merch-incoming-product-caption', docProductPhoto);
-  setPhoto('merch-incoming-barcode-photo', 'merch-incoming-barcode-icon-fallback', 'merch-incoming-barcode-caption', docBarcodePhoto);
-  setPhoto('merch-ready-product-photo', null, null, docProductPhoto);
-  setPhoto('merch-ready-barcode-photo', null, null, docBarcodePhoto);
+    if (fallbackId) {
+      const fallback = document.getElementById(fallbackId);
+      if (fallback) fallback.style.display = 'none';
+    }
+  } else {
+    img.style.display = 'none';
+    if (fallbackId) {
+      const fallback = document.getElementById(fallbackId);
+      if (fallback) fallback.style.display = '';
+    }
+  }
 }
+
+// --- Master tick: every request's countdown + auto-expiry, drives every screen that shows live requests ---
+function expireOldRequests() {
+  const now = Date.now();
+  const before = merchRequests.length;
+  merchRequests = merchRequests.filter(r => !(r.status === 'processing' && r.deadline && now >= r.deadline));
+  return merchRequests.length !== before;
+}
+
+setInterval(() => {
+  if (expireOldRequests()) showToast('Заявка отменена — магазин не принял её вовремя');
+  renderInstallmentScreen();
+  renderMerchHome();
+  refreshMerchWaitingBanner();
+}, 1000);
 
 screenEnterHandlers['screen-qr'] = () => {
   // beam animation restarts automatically via CSS
 };
 
-// --- Store form screen ---
-const submitOrderBtn = document.getElementById('btn-submit-order');
+// --- Product/barcode photo inputs (filled in by the merchant, see screen-merch-fill-info) ---
 const productPhotoInput = document.getElementById('product-photo-input');
 const barcodePhotoInput = document.getElementById('barcode-photo-input');
 const productPhotoPreview = document.getElementById('product-photo-preview');
@@ -573,10 +623,6 @@ const barcodePhotoContent = document.getElementById('barcode-photo-content');
 let productPhotoSet = false;
 let barcodePhotoSet = false;
 
-function validateStoreForm() {
-  submitOrderBtn.disabled = !(productPhotoSet && barcodePhotoSet);
-}
-
 function handlePhotoInput(input, preview, content, area, setter) {
   input.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -587,59 +633,26 @@ function handlePhotoInput(input, preview, content, area, setter) {
         content.style.display = 'none';
         area.classList.add('has-photo');
         setter(true);
-        validateStoreForm();
       };
       reader.readAsDataURL(e.target.files[0]);
     }
   });
 }
 
-handlePhotoInput(productPhotoInput, productPhotoPreview, productPhotoContent, productPhotoArea, v => { productPhotoSet = v; });
-handlePhotoInput(barcodePhotoInput, barcodePhotoPreview, barcodePhotoContent, barcodePhotoArea, v => { barcodePhotoSet = v; });
-
-// --- Store form: installment term select ---
-document.querySelectorAll('#term-select .term-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#term-select .term-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentTerm = parseInt(btn.dataset.term, 10);
-  });
-});
-
-submitOrderBtn.addEventListener('click', () => {
-  submitOrderBtn.textContent = 'Отправляется…';
-  submitOrderBtn.disabled = true;
+// --- QR scan: request goes straight to the merchant, no client-side form ---
+const btnQrNext = document.getElementById('btn-qr-next');
+btnQrNext.addEventListener('click', () => {
+  btnQrNext.disabled = true;
+  btnQrNext.textContent = 'Отправляется…';
   setTimeout(() => {
-    docProductPhoto = productPhotoPreview.src;
-    docBarcodePhoto = barcodePhotoPreview.src;
-    renderDocPhotos();
-    applicationPending = true;
-    todaysApplicationsCount++;
-    startRequestTimer();
+    createRequest('client', phoneInput.value || '+998 90 ···· 4412');
     document.getElementById('pending-store-name').textContent = currentStore;
-    document.getElementById('merch-incoming-term').textContent = `${currentTerm} месяцев`;
-    showToast('Заявка отправлена! Ожидайте подтверждения');
+    btnQrNext.disabled = false;
+    btnQrNext.textContent = 'Симулировать сканирование';
+    showToast('Заявка отправлена в магазин. С вами скоро свяжутся');
     showScreen('screen-home');
   }, 1200);
 });
-
-screenEnterHandlers['screen-store-form'] = () => {
-  clearInterval(qrTimerInterval);
-  productPhotoSet = false;
-  barcodePhotoSet = false;
-  productPhotoPreview.classList.remove('show');
-  barcodePhotoPreview.classList.remove('show');
-  productPhotoContent.style.display = '';
-  barcodePhotoContent.style.display = '';
-  productPhotoArea.classList.remove('has-photo');
-  barcodePhotoArea.classList.remove('has-photo');
-  submitOrderBtn.disabled = true;
-  submitOrderBtn.textContent = 'Отправить заявку';
-  submitOrderBtn.style.background = '';
-  submitOrderBtn.style.color = '';
-  currentTerm = 6;
-  document.querySelectorAll('#term-select .term-btn').forEach(b => b.classList.toggle('active', b.dataset.term === '6'));
-};
 
 // --- Sadaqa: category filter ---
 document.querySelectorAll('.sadaqa-cat').forEach(btn => {
@@ -668,50 +681,6 @@ document.querySelectorAll('.sadaqa-donate-btn').forEach(btn => {
 // ════════════════════════════════════════
 // INSTALLMENT: REQUESTS (pending) + ACTIVE STATE (client side)
 // ════════════════════════════════════════
-let installmentActive = false;
-let clientConfirmed = false;
-let currentProductName = '';
-let currentProductPrice = '';
-let currentTerm = 6;
-
-const REQUEST_TIMEOUT_MS = 15 * 60 * 1000;
-let requestDeadline = null;
-let requestTimerInterval = null;
-
-function startRequestTimer() {
-  requestDeadline = Date.now() + REQUEST_TIMEOUT_MS;
-  clearInterval(requestTimerInterval);
-  updateRequestTimer();
-  requestTimerInterval = setInterval(updateRequestTimer, 1000);
-}
-
-function stopRequestTimer() {
-  clearInterval(requestTimerInterval);
-  requestTimerInterval = null;
-  requestDeadline = null;
-}
-
-function updateRequestTimer() {
-  if (!requestDeadline) return;
-  const msLeft = requestDeadline - Date.now();
-  if (msLeft <= 0) {
-    stopRequestTimer();
-    applicationPending = false;
-    showToast('Заявка отменена — магазин не принял её вовремя');
-    renderInstallmentScreen();
-    screenEnterHandlers['screen-home']();
-    return;
-  }
-  const totalSec = Math.ceil(msLeft / 1000);
-  const min = Math.floor(totalSec / 60);
-  const sec = totalSec % 60;
-  const text = `${min}:${String(sec).padStart(2, '0')}`;
-  const timerEl = document.getElementById('inst-request-timer');
-  const listTimerEl = document.getElementById('inst-list-timer');
-  if (timerEl) timerEl.textContent = text;
-  if (listTimerEl) listTimerEl.textContent = text;
-}
-
 const RU_MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
 function renderPaymentSchedule(term, priceDigits) {
@@ -734,8 +703,16 @@ function renderPaymentSchedule(term, priceDigits) {
   }
 }
 
+function formatCountdown(deadline) {
+  const msLeft = Math.max(0, deadline - Date.now());
+  const totalSec = Math.ceil(msLeft / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}
+
 function renderInstallmentScreen() {
-  renderDocPhotos();
+  const req = getClientRequest();
   const requestsSection = document.getElementById('installment-requests-section');
   const activeSection = document.getElementById('installment-active-section');
   const emptyDiv = document.getElementById('installment-empty');
@@ -744,12 +721,11 @@ function renderInstallmentScreen() {
   const dealSlotRequests = document.getElementById('inst-deal-slot-requests');
   const dealSlotActive = document.getElementById('inst-deal-slot-active');
 
-  // Waiting for the merchant to accept the request
-  const waitingOnMerchant = applicationPending && !installmentActive;
-  // Merchant filled in product info, waiting for the CLIENT to confirm — stays a "заявка", not "активная"
-  const waitingOnClient = installmentActive && !clientConfirmed;
-  // Both sides done — only now does it count as an active installment
-  const isActive = installmentActive && clientConfirmed;
+  const waitingOnMerchant = !!req && req.status === 'processing';
+  const waitingOnClient = !!req && req.status === 'awaiting_client';
+  const isActive = !!req && req.status === 'confirmed';
+
+  setPhotoEl('inst-product-photo', 'inst-product-icon-fallback', req ? req.productPhoto : '');
 
   merchantPendingRow.style.display = waitingOnMerchant ? '' : 'none';
   dealRow.style.display = (waitingOnClient || isActive) ? '' : 'none';
@@ -763,38 +739,40 @@ function renderInstallmentScreen() {
   if (waitingOnMerchant) {
     document.getElementById('inst-request-store').textContent = currentStore;
     document.getElementById('inst-list-request-store').textContent = currentStore;
-    updateRequestTimer();
+    const text = formatCountdown(req.deadline);
+    document.getElementById('inst-request-timer').textContent = text;
+    document.getElementById('inst-list-timer').textContent = text;
   }
 
-  if (installmentActive) {
+  if (waitingOnClient || isActive) {
     const badge = document.getElementById('installment-status-badge');
     const listBadge = document.getElementById('inst-list-badge');
     const confirmBtn = document.getElementById('btn-confirm-installment');
-    const priceDigits = parseInt((currentProductPrice || '').replace(/\D/g, ''), 10) || 0;
+    const priceDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
 
-    if (currentProductName) {
-      document.getElementById('inst-product-name').textContent = currentProductName;
-      document.getElementById('inst-list-name').textContent = currentProductName;
+    if (req.productName) {
+      document.getElementById('inst-product-name').textContent = req.productName;
+      document.getElementById('inst-list-name').textContent = req.productName;
     }
-    document.getElementById('inst-price').textContent = currentProductPrice || '0';
-    document.getElementById('inst-term-label').textContent = `сум · ${currentTerm} мес`;
-    document.getElementById('inst-list-price').textContent = `${currentProductPrice || '0'} сум · ${currentTerm} мес`;
-    renderPaymentSchedule(currentTerm, priceDigits);
+    document.getElementById('inst-price').textContent = req.price || '0';
+    document.getElementById('inst-term-label').textContent = `сум · ${req.term} мес`;
+    document.getElementById('inst-list-price').textContent = `${req.price || '0'} сум · ${req.term} мес`;
+    renderPaymentSchedule(req.term, priceDigits);
 
-    if (clientConfirmed) {
+    if (isActive) {
       badge.className = 'inst-status-badge active';
-      badge.innerHTML = '<span class="inst-badge-dot"></span>Активна';
+      badge.innerHTML = '<span class="inst-badge-dot"></span>Подтверждено вами';
       listBadge.className = 'inst-status-badge active';
-      listBadge.innerHTML = '<span class="inst-badge-dot"></span>Активна';
+      listBadge.innerHTML = '<span class="inst-badge-dot"></span>Подтверждено вами';
       confirmBtn.textContent = 'Принято ✓';
       confirmBtn.disabled = true;
       confirmBtn.style.background = 'linear-gradient(135deg, #14c99a, #0fa882)';
       confirmBtn.style.color = '#fff';
     } else {
       badge.className = 'inst-status-badge pending';
-      badge.innerHTML = '<span class="inst-badge-dot"></span>Ждём вашего подтверждения';
+      badge.innerHTML = '<span class="inst-badge-dot"></span>Ответ получен';
       listBadge.className = 'inst-status-badge pending';
-      listBadge.innerHTML = '<span class="inst-badge-dot"></span>Ждём вас';
+      listBadge.innerHTML = '<span class="inst-badge-dot"></span>Ответ получен';
       confirmBtn.textContent = 'Подтвердить условия рассрочки';
       confirmBtn.disabled = false;
       confirmBtn.style.background = '';
@@ -808,10 +786,12 @@ screenEnterHandlers['screen-installment-request'] = renderInstallmentScreen;
 screenEnterHandlers['screen-installment-active'] = renderInstallmentScreen;
 
 document.getElementById('btn-confirm-installment').addEventListener('click', () => {
-  clientConfirmed = true;
-  renderInstallmentScreen();
+  const req = getClientRequest();
+  if (!req) return;
+  req.status = 'confirmed';
   showToast('Рассрочка подтверждена! Можете забрать товар в магазине');
   document.getElementById('merch-ship-push-banner').classList.add('show');
+  showScreen('screen-installment');
 });
 
 // ════════════════════════════════════════
@@ -842,50 +822,72 @@ function renderMerchHistory() {
 
 screenEnterHandlers['screen-merch-history'] = renderMerchHistory;
 
-// --- Merch home: show incoming applications section when there's a pending client request ---
-let dealShipped = false;
-let todaysApplicationsCount = 0;
-
-screenEnterHandlers['screen-merch-home'] = () => {
-  const incomingSection = document.getElementById('merch-incoming-section');
-  incomingSection.style.display = applicationPending ? 'block' : 'none';
-  document.getElementById('merch-bell-dot').classList.toggle('hidden', !applicationPending);
-
-  document.getElementById('merch-stat-applications').textContent = todaysApplicationsCount;
-  const todaysRevenue = merchHistory.reduce((sum, deal) => sum + deal.amountDigits, 0);
-  document.getElementById('merch-stat-revenue').textContent = formatPrice(String(todaysRevenue));
-
-  const dealSection = document.getElementById('merch-deal-section');
-  const showDeal = installmentActive && !dealShipped;
-  dealSection.style.display = showDeal ? 'block' : 'none';
-  if (showDeal) {
-    document.getElementById('merch-deal-name').textContent = currentProductName || 'Товар';
-    document.getElementById('merch-deal-status').textContent = clientConfirmed
-      ? 'Клиент подтвердил — готово к отгрузке'
-      : 'Ждём подтверждения клиента';
-  }
+// --- Merch home: one filterable vertical list of every request, self-initiated or client-initiated ---
+const STATUS_LABEL = {
+  processing: 'Оформление',
+  awaiting_client: 'Ответ получен',
 };
 
-// Tap on notification card → incoming screen
-document.getElementById('merch-notif-card').addEventListener('click', () => {
-  showScreen('screen-merch-incoming');
+function openRequest(id) {
+  currentRequestId = id;
+  const req = merchRequests.find(r => r.id === id);
+  if (!req) return;
+  if (req.status === 'processing') showScreen('screen-merch-incoming');
+  else if (req.status === 'awaiting_client') showScreen('screen-merch-waiting');
+  else if (req.status === 'confirmed') showScreen('screen-merch-ready');
+}
+
+function renderMerchHome() {
+  const list = document.getElementById('merch-requests-list');
+  const empty = document.getElementById('merch-requests-empty');
+  if (!list || !empty) return; // not on this screen's DOM yet during early init
+
+  document.getElementById('merch-bell-dot').classList.toggle('hidden', !merchRequests.some(r => r.status === 'processing'));
+
+  const filtered = merchRequests.filter(r => !r.shipped && (merchHomeFilter === 'all' || r.origin === merchHomeFilter));
+  list.innerHTML = '';
+  empty.style.display = filtered.length ? 'none' : '';
+
+  filtered.slice().reverse().forEach(req => {
+    const row = document.createElement('button');
+    row.className = 'inst-list-item';
+    row.style.cssText = 'width:100%;text-align:left;font-family:var(--font-body);cursor:pointer;';
+
+    const originLabel = req.origin === 'self' ? 'От меня' : 'От клиента';
+    const title = req.productName || req.phone;
+    let rightHTML;
+    if (req.status === 'processing') {
+      rightHTML = `<span class="inst-list-timer">${formatCountdown(req.deadline)}</span>`;
+    } else if (req.status === 'confirmed') {
+      rightHTML = `<span class="inst-status-badge active"><span class="inst-badge-dot"></span>Ожидает отгрузки</span>`;
+    } else {
+      rightHTML = `<span class="inst-status-badge pending"><span class="inst-badge-dot"></span>${STATUS_LABEL[req.status]}</span>`;
+    }
+
+    row.innerHTML = `<div class="inst-list-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#0fa882" stroke-width="1.4"/><path d="M5.5 9.2L7.8 11.5L12.5 6.5" stroke="#0fa882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="inst-list-info"><div class="inst-list-title">${title}</div><div class="inst-list-sub">${originLabel} · ${req.phone}</div></div><div class="inst-list-right">${rightHTML}<span class="inst-list-arrow">›</span></div>`;
+    row.addEventListener('click', () => openRequest(req.id));
+    list.appendChild(row);
+  });
+}
+
+screenEnterHandlers['screen-merch-home'] = renderMerchHome;
+
+document.querySelectorAll('#merch-filter-row .merch-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#merch-filter-row .merch-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    merchHomeFilter = btn.dataset.filter;
+    renderMerchHome();
+  });
 });
 
-// Tap on current-deal card → waiting screen or ready-to-ship screen, depending on client confirmation
-document.getElementById('merch-deal-card').addEventListener('click', () => {
-  showScreen(clientConfirmed ? 'screen-merch-ready' : 'screen-merch-waiting');
-});
-
-// Tap on bell → incoming screen (if there's something to review)
+// Tap on bell → just a quick summary; the full list is already right there on the home screen
 document.getElementById('merch-bell-btn').addEventListener('click', () => {
-  if (applicationPending) {
-    showScreen('screen-merch-incoming');
-  } else {
-    showToast('Нет новых заявок');
-  }
+  const count = merchRequests.filter(r => r.status === 'processing').length;
+  showToast(count > 0 ? `Заявок ждёт обработки: ${count}` : 'Нет новых заявок');
 });
 
-// --- Merch new application form ---
+// --- Merch new application form (self-initiated: merchant enters a walk-in customer) ---
 const merchPhoneInput = document.getElementById('merch-phone');
 const btnMerchSubmit = document.getElementById('btn-merch-submit');
 const merchProductPhotoInput = document.getElementById('merch-product-photo-input');
@@ -922,13 +924,16 @@ handlePhotoInput(
   v => { merchBarcodePhotoSet = v; validateMerchForm(); }
 );
 
+let _pendingSelfRequestId = null;
+
 btnMerchSubmit.addEventListener('click', () => {
   btnMerchSubmit.textContent = 'Отправляется…';
   btnMerchSubmit.disabled = true;
   setTimeout(() => {
-    docProductPhoto = merchProductPhotoPreview.src;
-    docBarcodePhoto = merchBarcodePhotoPreview.src;
-    renderDocPhotos();
+    const req = createRequest('self', merchPhoneInput.value);
+    req.productPhoto = merchProductPhotoPreview.src;
+    req.barcodePhoto = merchBarcodePhotoPreview.src;
+    _pendingSelfRequestId = req.id;
     showToast('Заявка отправлена клиенту!');
     showScreen('screen-merch-new-pending');
   }, 1200);
@@ -956,9 +961,6 @@ screenEnterHandlers['screen-merch-new-pending'] = () => {
   merchPushBanner.classList.remove('show');
   clearTimeout(_merchPushTimer);
   _merchPushTimer = setTimeout(() => {
-    applicationPending = true;
-    todaysApplicationsCount++;
-    startRequestTimer();
     merchPushBanner.classList.add('show');
   }, 3000);
 };
@@ -966,19 +968,25 @@ screenEnterHandlers['screen-merch-new-pending'] = () => {
 merchPushBanner.addEventListener('click', () => {
   merchPushBanner.classList.remove('show');
   clearTimeout(_merchPushTimer);
+  currentRequestId = _pendingSelfRequestId;
   showScreen('screen-merch-incoming');
 });
 
 // --- Merch incoming: fill info / reject ---
-screenEnterHandlers['screen-merch-incoming'] = renderDocPhotos;
+screenEnterHandlers['screen-merch-incoming'] = () => {
+  const req = getCurrentRequest();
+  if (!req) return;
+  document.getElementById('merch-incoming-phone').textContent = req.phone;
+  document.getElementById('merch-incoming-name').textContent = req.origin === 'client' ? 'Олег' : '—';
+  document.getElementById('merch-incoming-appnum').textContent = req.appNumber;
+};
 
 document.getElementById('btn-merch-fill-info').addEventListener('click', () => {
   showScreen('screen-merch-fill-info');
 });
 
 document.getElementById('btn-merch-reject-app').addEventListener('click', () => {
-  applicationPending = false;
-  stopRequestTimer();
+  if (currentRequestId) removeRequest(currentRequestId);
   showToast('Заявка отклонена');
   showScreen('screen-merch-home');
 });
@@ -1010,36 +1018,100 @@ merchItemPriceInput.addEventListener('input', () => {
 });
 merchItemMarkingInput.addEventListener('input', validateMerchFillForm);
 
+handlePhotoInput(productPhotoInput, productPhotoPreview, productPhotoContent, productPhotoArea, v => { productPhotoSet = v; validateMerchFillForm(); });
+handlePhotoInput(barcodePhotoInput, barcodePhotoPreview, barcodePhotoContent, barcodePhotoArea, v => { barcodePhotoSet = v; validateMerchFillForm(); });
+
+document.querySelectorAll('#term-select .term-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#term-select .term-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const req = getCurrentRequest();
+    if (req) req.term = parseInt(btn.dataset.term, 10);
+  });
+});
+
+function setFillInfoPhoto(preview, content, area, existingSrc, setter) {
+  if (existingSrc) {
+    preview.src = existingSrc;
+    preview.classList.add('show');
+    content.style.display = 'none';
+    area.classList.add('has-photo');
+    setter(true);
+  } else {
+    preview.classList.remove('show');
+    content.style.display = '';
+    area.classList.remove('has-photo');
+    setter(false);
+  }
+}
+
 screenEnterHandlers['screen-merch-fill-info'] = () => {
+  const req = getCurrentRequest();
   merchItemNameInput.value = '';
   merchItemCategoryInput.value = '';
   merchItemPriceInput.value = '';
   merchItemMarkingInput.value = '';
-  btnMerchFillSubmit.disabled = true;
+  const term = req ? req.term : 6;
+  document.querySelectorAll('#term-select .term-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.term, 10) === term));
+
+  // If the merchant already attached photos themselves (self-initiated flow), keep them — otherwise require capture here.
+  setFillInfoPhoto(productPhotoPreview, productPhotoContent, productPhotoArea, req ? req.productPhoto : '', v => { productPhotoSet = v; });
+  setFillInfoPhoto(barcodePhotoPreview, barcodePhotoContent, barcodePhotoArea, req ? req.barcodePhoto : '', v => { barcodePhotoSet = v; });
+
   btnMerchFillSubmit.textContent = 'Подтвердить заявку';
+  validateMerchFillForm();
 };
 
 btnMerchFillSubmit.addEventListener('click', () => {
+  const req = getCurrentRequest();
+  if (!req) return;
   btnMerchFillSubmit.textContent = 'Отправляется…';
   btnMerchFillSubmit.disabled = true;
+  req.productName = merchItemNameInput.value.trim();
+  req.price = merchItemPriceInput.value.trim();
+  req.productPhoto = productPhotoSet ? productPhotoPreview.src : '';
+  req.barcodePhoto = barcodePhotoSet ? barcodePhotoPreview.src : '';
+  req.deadline = null; // merchant has acted — no longer at risk of auto-expiry
   setTimeout(() => {
-    currentProductName = merchItemNameInput.value.trim();
-    currentProductPrice = merchItemPriceInput.value.trim();
-    installmentActive = true;
-    dealShipped = false;
-    applicationPending = false; // clear notification badge
-    stopRequestTimer();
-    showToast('Заявка подтверждена! Ожидаем клиента');
-    showScreen('screen-merch-waiting');
-  }, 900);
+    showScreen('screen-merch-scoring');
+  }, 700);
 });
+
+// --- Scoring: re-check the client's limit before the deal becomes active ---
+screenEnterHandlers['screen-merch-scoring'] = () => {
+  const spinner = document.getElementById('merch-scoring-spinner');
+  const check = document.getElementById('merch-scoring-check');
+  const text = document.getElementById('merch-scoring-text');
+  spinner.style.display = 'flex';
+  check.classList.remove('show');
+  text.textContent = 'Отправляем заявку на скоринг…';
+
+  clearTimeout(screenEnterHandlers._scoringTimeout);
+  screenEnterHandlers._scoringTimeout = setTimeout(() => {
+    spinner.style.display = 'none';
+    check.classList.add('show');
+    text.textContent = 'Лимит подтверждён!';
+    const req = getCurrentRequest();
+    if (req) req.status = 'awaiting_client';
+
+    clearTimeout(screenEnterHandlers._scoringDoneTimeout);
+    screenEnterHandlers._scoringDoneTimeout = setTimeout(() => {
+      showToast('Заявка подтверждена! Ожидаем клиента');
+      showScreen('screen-merch-waiting');
+    }, 900);
+  }, 1800);
+};
 
 // --- Merch waiting: push banner when client accepts the terms ---
 const merchShipPushBanner = document.getElementById('merch-ship-push-banner');
 
-screenEnterHandlers['screen-merch-waiting'] = () => {
-  merchShipPushBanner.classList.toggle('show', clientConfirmed);
-};
+function refreshMerchWaitingBanner() {
+  if (!document.getElementById('screen-merch-waiting').classList.contains('active')) return;
+  const req = getCurrentRequest();
+  merchShipPushBanner.classList.toggle('show', !!req && req.status === 'confirmed');
+}
+
+screenEnterHandlers['screen-merch-waiting'] = refreshMerchWaitingBanner;
 
 merchShipPushBanner.addEventListener('click', () => {
   merchShipPushBanner.classList.remove('show');
@@ -1060,9 +1132,11 @@ handlePhotoInput(merchHandoverPhotoInput, merchHandoverPhotoPreview, merchHandov
 });
 
 screenEnterHandlers['screen-merch-ready'] = () => {
-  document.getElementById('merch-ready-item-name').textContent = currentProductName || 'Товар';
-  document.getElementById('merch-ready-item-price').textContent = `${currentProductPrice || '0'} сум`;
-  renderDocPhotos();
+  const req = getCurrentRequest();
+  document.getElementById('merch-ready-item-name').textContent = (req && req.productName) || 'Товар';
+  document.getElementById('merch-ready-item-price').textContent = `${(req && req.price) || '0'} сум`;
+  setPhotoEl('merch-ready-product-photo', null, req ? req.productPhoto : '');
+  setPhotoEl('merch-ready-barcode-photo', null, req ? req.barcodePhoto : '');
   merchHandoverPhotoSet = false;
   merchHandoverPhotoPreview.classList.remove('show');
   merchHandoverPhotoContent.style.display = '';
@@ -1075,16 +1149,21 @@ btnShipGoods.addEventListener('click', () => {
   btnShipGoods.textContent = 'Отгружается…';
   btnShipGoods.disabled = true;
   setTimeout(() => {
-    dealShipped = true;
-    const now = new Date();
-    const amountDigits = parseInt((currentProductPrice || '').replace(/\D/g, ''), 10) || 0;
-    merchHistory.unshift({
-      name: currentProductName || 'Товар',
-      phone: phoneInput.value || '+998 90 ···· 4412',
-      date: `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`,
-      amount: currentProductPrice || '0',
-      amountDigits,
-    });
+    const req = getCurrentRequest();
+    if (req) {
+      const now = new Date();
+      const amountDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
+      merchHistory.unshift({
+        name: req.productName || 'Товар',
+        phone: req.phone || '+998 90 ···· 4412',
+        date: `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`,
+        amount: req.price || '0',
+        amountDigits,
+      });
+      // Mark shipped (drops off the merchant's live list) without deleting it — the client's
+      // installment is still active and keeps showing under "Активные" until fully paid off.
+      req.shipped = true;
+    }
     showToast('Товар отгружен! Средства поступят в течение 1 рабочего дня');
     showScreen('screen-merch-done');
   }, 1000);
