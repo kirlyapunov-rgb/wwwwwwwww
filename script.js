@@ -138,6 +138,33 @@ notifOverlay.addEventListener('click', (e) => {
   if (e.target === notifOverlay) notifOverlay.classList.remove('show');
 });
 
+// --- Client-side: installment offer sent by a merchant (walk-in flow) ---
+const offerSentOverlay = document.getElementById('offer-sent-overlay');
+const offerSentCloseBtn = document.getElementById('offer-sent-close-btn');
+const offerSentText = document.getElementById('offer-sent-text');
+
+const offerSentCta = document.getElementById('offer-sent-cta');
+offerSentCloseBtn.addEventListener('click', () => offerSentOverlay.classList.remove('show'));
+offerSentCta.addEventListener('click', () => offerSentOverlay.classList.remove('show'));
+offerSentOverlay.addEventListener('click', (e) => {
+  if (e.target === offerSentOverlay) offerSentOverlay.classList.remove('show');
+});
+
+let pendingClientOffer = null; // set when the merchant sends a walk-in offer, shown to the client on their next home visit
+let installmentBadgeVisible = false;
+
+function updateInstallmentBadge() {
+  document.querySelectorAll('[data-nav="screen-installment"] .tab-badge').forEach(el => {
+    el.classList.toggle('show', installmentBadgeVisible);
+  });
+}
+
+function notifyClientOfNewOffer(req) {
+  pendingClientOffer = req;
+  installmentBadgeVisible = true;
+  updateInstallmentBadge();
+}
+
 // --- Home: product carousel -> "bind a card first" modal ---
 const cardRequiredOverlay = document.getElementById('card-required-overlay');
 const cardRequiredCloseBtn = document.getElementById('card-required-close-btn');
@@ -162,13 +189,22 @@ screenEnterHandlers['screen-home'] = () => {
   limitWidget.classList.remove('show');
   pendingWidget.classList.remove('show');
 
+  // A merchant-opened walk-in offer shouldn't hijack the home screen — the client just sees the usual
+  // limit widget and finds out via the "Рассрочка" tab badge + the popup below, not a spinner here.
   const clientReq = getClientRequest();
-  if (clientReq && clientReq.status === 'processing') {
+  if (clientReq && clientReq.status === 'processing' && clientReq.origin === 'client') {
     pendingWidget.classList.add('show');
   } else if (cardBound) {
     limitWidget.classList.add('show');
   } else {
     emptyWidget.style.display = '';
+  }
+
+  if (pendingClientOffer) {
+    const offer = pendingClientOffer;
+    offerSentText.textContent = `Магазин предлагает оформить «${offer.productName}» за ${offer.price} сум в рассрочку на ${offer.term} мес. Посмотрите детали в разделе «Рассрочка»`;
+    offerSentOverlay.classList.add('show');
+    pendingClientOffer = null;
   }
 };
 
@@ -537,15 +573,21 @@ const REQUEST_TIMEOUT_MS = 15 * 60 * 1000;
 let merchRequests = [];
 let nextRequestId = 1;
 let currentRequestId = null; // which request the open detail screen refers to
+let currentDealId = null; // which shipped deal the deal-detail screen refers to
+
+function openDealDetail(id) {
+  currentDealId = id;
+  showScreen('screen-merch-deal-detail');
+}
 let merchHomeFilter = 'all'; // 'all' | 'self' | 'client'
 
 function getCurrentRequest() {
   return merchRequests.find(r => r.id === currentRequestId) || null;
 }
 
-// The client app only ever cares about its own (QR-scanned) requests — pick the most recent one.
+// The client app cares about its own requests, whether it scanned a QR itself or a merchant opened a walk-in offer for it — pick the most recent one.
 function getClientRequest() {
-  const clientReqs = merchRequests.filter(r => r.origin === 'client');
+  const clientReqs = merchRequests.filter(r => r.origin === 'client' || r.origin === 'self');
   return clientReqs[clientReqs.length - 1] || null;
 }
 
@@ -558,7 +600,9 @@ function createRequest(origin, phone) {
     status: 'processing', // processing -> awaiting_client -> confirmed
     term: 6,
     productName: '',
+    category: '',
     price: '',
+    marking: '',
     productPhoto: '',
     barcodePhoto: '',
     deadline: Date.now() + REQUEST_TIMEOUT_MS,
@@ -712,6 +756,9 @@ function formatCountdown(deadline) {
 }
 
 function renderInstallmentScreen() {
+  installmentBadgeVisible = false;
+  updateInstallmentBadge();
+
   const req = getClientRequest();
   const requestsSection = document.getElementById('installment-requests-section');
   const activeSection = document.getElementById('installment-active-section');
@@ -721,8 +768,10 @@ function renderInstallmentScreen() {
   const dealSlotRequests = document.getElementById('inst-deal-slot-requests');
   const dealSlotActive = document.getElementById('inst-deal-slot-active');
 
-  const waitingOnMerchant = !!req && req.status === 'processing';
-  const waitingOnClient = !!req && req.status === 'awaiting_client';
+  // A merchant-opened walk-in offer already has product/price/term the moment it's created —
+  // there's nothing left to wait on the merchant for, so it reads as an incoming offer right away.
+  const waitingOnMerchant = !!req && req.status === 'processing' && req.origin === 'client';
+  const waitingOnClient = !!req && (req.status === 'awaiting_client' || (req.status === 'processing' && req.origin === 'self'));
   const isActive = !!req && req.status === 'confirmed';
 
   setPhotoEl('inst-product-photo', 'inst-product-icon-fallback', req ? req.productPhoto : '');
@@ -810,9 +859,12 @@ function renderMerchHistory() {
   let totalRevenue = 0;
   merchHistory.forEach(deal => {
     totalRevenue += deal.amountDigits;
-    const item = document.createElement('div');
+    const item = document.createElement('button');
+    item.type = 'button';
     item.className = 'merch-app-item';
-    item.innerHTML = `<div class="merch-app-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#0fa882" stroke-width="1.4"/><path d="M5.5 9.2L7.8 11.5L12.5 6.5" stroke="#0fa882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="merch-app-info"><div class="merch-app-name">${deal.name}</div><div class="merch-app-meta">${deal.phone} · ${deal.date}</div></div><div class="merch-app-amount">${deal.amount}</div>`;
+    item.style.cssText = 'width:100%;text-align:left;font-family:var(--font-body);cursor:pointer;';
+    item.innerHTML = `<div class="merch-app-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#0fa882" stroke-width="1.4"/><path d="M5.5 9.2L7.8 11.5L12.5 6.5" stroke="#0fa882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="merch-app-info"><div class="merch-app-name">${deal.name}</div><div class="merch-app-meta">${deal.phone} · ${deal.date}</div></div><div style="text-align:right;flex-shrink:0;"><div class="merch-app-amount">${deal.amount}</div><div class="merch-app-payout">Выплата ${deal.payoutDate}</div></div>`;
+    item.addEventListener('click', () => openDealDetail(deal.id));
     list.appendChild(item);
   });
 
@@ -821,6 +873,23 @@ function renderMerchHistory() {
 }
 
 screenEnterHandlers['screen-merch-history'] = renderMerchHistory;
+
+// --- Merch deal detail: full drilldown into a shipped deal, reached from История/Расчёты ---
+screenEnterHandlers['screen-merch-deal-detail'] = () => {
+  const deal = merchHistory.find(d => d.id === currentDealId);
+  if (!deal) return; // also reachable via devnav directly, without a deal selected
+  document.getElementById('merch-deal-appnum').textContent = deal.appNumber;
+  document.getElementById('merch-deal-name').textContent = deal.name;
+  document.getElementById('merch-deal-category').textContent = deal.category || '—';
+  document.getElementById('merch-deal-price').textContent = `${deal.amount} сум`;
+  document.getElementById('merch-deal-term').textContent = `${deal.term} мес`;
+  document.getElementById('merch-deal-marking').textContent = deal.marking || '—';
+  document.getElementById('merch-deal-phone').textContent = deal.phone;
+  document.getElementById('merch-deal-origin').textContent = deal.origin === 'self' ? 'От меня' : 'От клиента';
+  document.getElementById('merch-deal-date').textContent = deal.date;
+  setPhotoEl('merch-deal-product-photo', null, deal.productPhoto);
+  setPhotoEl('merch-deal-barcode-photo', null, deal.barcodePhoto);
+};
 
 // --- Merch home: one filterable vertical list of every request, self-initiated or client-initiated ---
 const STATUS_LABEL = {
@@ -843,6 +912,16 @@ function renderMerchHome() {
   if (!list || !empty) return; // not on this screen's DOM yet during early init
 
   document.getElementById('merch-bell-dot').classList.toggle('hidden', !merchRequests.some(r => r.status === 'processing'));
+  const payoutSum = merchHistory.reduce((s, d) => s + d.amountDigits, 0);
+  document.getElementById('merch-payout-amount').textContent = formatPrice(String(payoutSum));
+  const payoutStatusEl = document.getElementById('merch-payout-status');
+  if (payoutSum > 0) {
+    const nearest = merchHistory.reduce((min, d) => Math.min(min, d.payoutTimestamp), Infinity);
+    payoutStatusEl.innerHTML = `<span class="inst-badge-dot"></span>Выплата ${merchHistory.find(d => d.payoutTimestamp === nearest).payoutDate}`;
+    payoutStatusEl.style.display = '';
+  } else {
+    payoutStatusEl.style.display = 'none';
+  }
 
   const filtered = merchRequests.filter(r => !r.shipped && (merchHomeFilter === 'all' || r.origin === merchHomeFilter));
   list.innerHTML = '';
@@ -889,6 +968,9 @@ document.getElementById('merch-bell-btn').addEventListener('click', () => {
 
 // --- Merch new application form (self-initiated: merchant enters a walk-in customer) ---
 const merchPhoneInput = document.getElementById('merch-phone');
+const merchNewNameInput = document.getElementById('merch-new-name');
+const merchNewPriceInput = document.getElementById('merch-new-price');
+const merchNewMarkingInput = document.getElementById('merch-new-marking');
 const btnMerchSubmit = document.getElementById('btn-merch-submit');
 const merchProductPhotoInput = document.getElementById('merch-product-photo-input');
 const merchBarcodePhotoInput = document.getElementById('merch-barcode-photo-input');
@@ -900,17 +982,35 @@ const merchProductPhotoArea = document.getElementById('merch-product-photo-area'
 const merchBarcodePhotoArea = document.getElementById('merch-barcode-photo-area');
 let merchProductPhotoSet = false;
 let merchBarcodePhotoSet = false;
+let merchNewTerm = 6;
 
 function validateMerchForm() {
   const digits = merchPhoneInput.value.replace(/\D/g, '');
   const phoneOk = digits.length === 12;
-  btnMerchSubmit.disabled = !(phoneOk && merchProductPhotoSet && merchBarcodePhotoSet);
+  const nameOk = merchNewNameInput.value.trim().length > 0;
+  const priceOk = merchNewPriceInput.value.replace(/\D/g, '').length > 0;
+  const markingOk = merchNewMarkingInput.value.trim().length > 0;
+  btnMerchSubmit.disabled = !(phoneOk && nameOk && priceOk && markingOk && merchProductPhotoSet && merchBarcodePhotoSet);
 }
 
 merchPhoneInput.addEventListener('input', () => {
   merchPhoneInput.value = formatPhone(merchPhoneInput.value);
   merchPhoneInput.setSelectionRange(merchPhoneInput.value.length, merchPhoneInput.value.length);
   validateMerchForm();
+});
+merchNewNameInput.addEventListener('input', validateMerchForm);
+merchNewPriceInput.addEventListener('input', () => {
+  merchNewPriceInput.value = formatPrice(merchNewPriceInput.value);
+  validateMerchForm();
+});
+merchNewMarkingInput.addEventListener('input', validateMerchForm);
+
+document.querySelectorAll('#new-term-select .term-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#new-term-select .term-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    merchNewTerm = parseInt(btn.dataset.term, 10);
+  });
 });
 
 handlePhotoInput(
@@ -924,6 +1024,37 @@ handlePhotoInput(
   v => { merchBarcodePhotoSet = v; validateMerchForm(); }
 );
 
+// --- Fill the walk-in form with random test data, so testing doesn't mean retyping everything each time ---
+const RANDOM_PRODUCT_NAMES = ['Смартфон', 'Ноутбук', 'Наушники', 'Смарт-часы', 'Телевизор', 'Холодильник', 'Стиральная машина', 'Пылесос', 'Микроволновка', 'Кондиционер'];
+const RANDOM_PHOTO_SRC = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Crect width='240' height='240' fill='%23e8ece9'/%3E%3Cpath d='M60 165 L100 115 L135 145 L170 90 L200 165 Z' fill='%23b7c2bd'/%3E%3Ccircle cx='85' cy='85' r='16' fill='%23b7c2bd'/%3E%3C/svg%3E";
+
+function setRandomPhoto(preview, content, area, setter) {
+  preview.src = RANDOM_PHOTO_SRC;
+  preview.classList.add('show');
+  content.style.display = 'none';
+  area.classList.add('has-photo');
+  setter(true);
+}
+
+document.getElementById('btn-merch-random-fill').addEventListener('click', () => {
+  const randomDigits = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)).join('');
+  merchPhoneInput.value = formatPhone('998' + randomDigits);
+
+  const term = [3, 6, 9, 12][Math.floor(Math.random() * 4)];
+  merchNewTerm = term;
+  document.querySelectorAll('#new-term-select .term-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.term, 10) === term));
+
+  merchNewNameInput.value = RANDOM_PRODUCT_NAMES[Math.floor(Math.random() * RANDOM_PRODUCT_NAMES.length)];
+  const randomPrice = (Math.floor(Math.random() * 48) + 2) * 100000; // 200 000 – 5 000 000
+  merchNewPriceInput.value = formatPrice(String(randomPrice));
+  merchNewMarkingInput.value = 'OK' + Math.floor(100000 + Math.random() * 900000);
+
+  setRandomPhoto(merchProductPhotoPreview, merchProductPhotoContent, merchProductPhotoArea, v => { merchProductPhotoSet = v; });
+  setRandomPhoto(merchBarcodePhotoPreview, merchBarcodePhotoContent, merchBarcodePhotoArea, v => { merchBarcodePhotoSet = v; });
+
+  validateMerchForm();
+});
+
 let _pendingSelfRequestId = null;
 
 btnMerchSubmit.addEventListener('click', () => {
@@ -931,9 +1062,14 @@ btnMerchSubmit.addEventListener('click', () => {
   btnMerchSubmit.disabled = true;
   setTimeout(() => {
     const req = createRequest('self', merchPhoneInput.value);
+    req.term = merchNewTerm;
+    req.productName = merchNewNameInput.value.trim();
+    req.price = merchNewPriceInput.value.trim();
+    req.marking = merchNewMarkingInput.value.trim();
     req.productPhoto = merchProductPhotoPreview.src;
     req.barcodePhoto = merchBarcodePhotoPreview.src;
     _pendingSelfRequestId = req.id;
+    notifyClientOfNewOffer(req);
     showToast('Заявка отправлена клиенту!');
     showScreen('screen-merch-new-pending');
   }, 1200);
@@ -941,6 +1077,11 @@ btnMerchSubmit.addEventListener('click', () => {
 
 screenEnterHandlers['screen-merch-new-form'] = () => {
   merchPhoneInput.value = '+998';
+  merchNewNameInput.value = '';
+  merchNewPriceInput.value = '';
+  merchNewMarkingInput.value = '';
+  merchNewTerm = 6;
+  document.querySelectorAll('#new-term-select .term-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.term, 10) === 6));
   merchProductPhotoSet = false;
   merchBarcodePhotoSet = false;
   merchProductPhotoPreview.classList.remove('show');
@@ -1011,7 +1152,7 @@ function validateMerchFillForm() {
 }
 
 merchItemNameInput.addEventListener('input', validateMerchFillForm);
-merchItemCategoryInput.addEventListener('input', validateMerchFillForm);
+merchItemCategoryInput.addEventListener('change', validateMerchFillForm);
 merchItemPriceInput.addEventListener('input', () => {
   merchItemPriceInput.value = formatPrice(merchItemPriceInput.value);
   validateMerchFillForm();
@@ -1047,10 +1188,11 @@ function setFillInfoPhoto(preview, content, area, existingSrc, setter) {
 
 screenEnterHandlers['screen-merch-fill-info'] = () => {
   const req = getCurrentRequest();
-  merchItemNameInput.value = '';
-  merchItemCategoryInput.value = '';
-  merchItemPriceInput.value = '';
-  merchItemMarkingInput.value = '';
+  // Walk-in flow already collected these up front — carry them over instead of asking again.
+  merchItemNameInput.value = req ? req.productName : '';
+  merchItemCategoryInput.value = req && req.category ? req.category : '';
+  merchItemPriceInput.value = req ? req.price : '';
+  merchItemMarkingInput.value = req && req.marking ? req.marking : '';
   const term = req ? req.term : 6;
   document.querySelectorAll('#term-select .term-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.term, 10) === term));
 
@@ -1068,7 +1210,9 @@ btnMerchFillSubmit.addEventListener('click', () => {
   btnMerchFillSubmit.textContent = 'Отправляется…';
   btnMerchFillSubmit.disabled = true;
   req.productName = merchItemNameInput.value.trim();
+  req.category = merchItemCategoryInput.value;
   req.price = merchItemPriceInput.value.trim();
+  req.marking = merchItemMarkingInput.value.trim();
   req.productPhoto = productPhotoSet ? productPhotoPreview.src : '';
   req.barcodePhoto = barcodePhotoSet ? barcodePhotoPreview.src : '';
   req.deadline = null; // merchant has acted — no longer at risk of auto-expiry
@@ -1118,18 +1262,8 @@ merchShipPushBanner.addEventListener('click', () => {
   showScreen('screen-merch-ready');
 });
 
-// --- Merch ready to ship: handover photo + ship goods ---
-const merchHandoverPhotoInput = document.getElementById('merch-handover-photo-input');
-const merchHandoverPhotoPreview = document.getElementById('merch-handover-photo-preview');
-const merchHandoverPhotoContent = document.getElementById('merch-handover-photo-content');
-const merchHandoverPhotoArea = document.getElementById('merch-handover-photo-area');
+// --- Merch ready to ship: confirm handover with the OTP code the client reads out, then ship goods ---
 const btnShipGoods = document.getElementById('btn-ship-goods');
-let merchHandoverPhotoSet = false;
-
-handlePhotoInput(merchHandoverPhotoInput, merchHandoverPhotoPreview, merchHandoverPhotoContent, merchHandoverPhotoArea, v => {
-  merchHandoverPhotoSet = v;
-  btnShipGoods.disabled = !v;
-});
 
 screenEnterHandlers['screen-merch-ready'] = () => {
   const req = getCurrentRequest();
@@ -1137,34 +1271,89 @@ screenEnterHandlers['screen-merch-ready'] = () => {
   document.getElementById('merch-ready-item-price').textContent = `${(req && req.price) || '0'} сум`;
   setPhotoEl('merch-ready-product-photo', null, req ? req.productPhoto : '');
   setPhotoEl('merch-ready-barcode-photo', null, req ? req.barcodePhoto : '');
-  merchHandoverPhotoSet = false;
-  merchHandoverPhotoPreview.classList.remove('show');
-  merchHandoverPhotoContent.style.display = '';
-  merchHandoverPhotoArea.classList.remove('has-photo');
-  btnShipGoods.disabled = true;
+  btnShipGoods.disabled = false;
   btnShipGoods.textContent = 'Товар отгружен';
 };
 
-btnShipGoods.addEventListener('click', () => {
-  btnShipGoods.textContent = 'Отгружается…';
-  btnShipGoods.disabled = true;
+function shipCurrentRequest() {
+  const req = getCurrentRequest();
+  if (req) {
+    const now = new Date();
+    // Matches the "1 рабочего дня" promise in the toast below.
+    const payoutTimestamp = now.getTime() + 24 * 60 * 60 * 1000;
+    const payoutDateObj = new Date(payoutTimestamp);
+    const amountDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
+    merchHistory.unshift({
+      id: req.id,
+      appNumber: req.appNumber,
+      origin: req.origin,
+      category: req.category,
+      term: req.term,
+      marking: req.marking,
+      productPhoto: req.productPhoto,
+      barcodePhoto: req.barcodePhoto,
+      name: req.productName || 'Товар',
+      phone: req.phone || '+998 90 ···· 4412',
+      date: `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`,
+      amount: req.price || '0',
+      amountDigits,
+      payoutTimestamp,
+      payoutDate: `${payoutDateObj.getDate()}.${String(payoutDateObj.getMonth() + 1).padStart(2, '0')}`,
+    });
+    // Mark shipped (drops off the merchant's live list) without deleting it — the client's
+    // installment is still active and keeps showing under "Активные" until fully paid off.
+    req.shipped = true;
+  }
+  showToast('Товар отгружен! Средства поступят в течение 1 рабочего дня');
+  showScreen('screen-merch-done');
+}
+
+// --- Handover OTP modal ---
+const handoverOtpOverlay = document.getElementById('handover-otp-overlay');
+const handoverOtpCloseBtn = document.getElementById('handover-otp-close-btn');
+const handoverOtpBoxes = Array.from(document.querySelectorAll('#handover-otp-row .otp-box'));
+const btnHandoverOtpConfirm = document.getElementById('btn-handover-otp-confirm');
+
+function checkHandoverOtpComplete() {
+  const filled = handoverOtpBoxes.every(b => b.value.trim().length === 1);
+  btnHandoverOtpConfirm.disabled = !filled;
+}
+
+handoverOtpBoxes.forEach((box, i) => {
+  box.addEventListener('input', () => {
+    box.value = box.value.replace(/\D/g, '').slice(0, 1);
+    if (box.value && handoverOtpBoxes[i + 1]) handoverOtpBoxes[i + 1].focus();
+    checkHandoverOtpComplete();
+  });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !box.value && handoverOtpBoxes[i - 1]) handoverOtpBoxes[i - 1].focus();
+  });
+});
+
+function openHandoverOtp() {
+  handoverOtpBoxes.forEach(b => { b.value = ''; });
+  btnHandoverOtpConfirm.disabled = true;
+  handoverOtpOverlay.classList.add('show');
+  handoverOtpBoxes[0].focus();
+}
+
+function closeHandoverOtp() {
+  handoverOtpOverlay.classList.remove('show');
+}
+
+handoverOtpCloseBtn.addEventListener('click', closeHandoverOtp);
+handoverOtpOverlay.addEventListener('click', (e) => {
+  if (e.target === handoverOtpOverlay) closeHandoverOtp();
+});
+
+btnShipGoods.addEventListener('click', openHandoverOtp);
+
+btnHandoverOtpConfirm.addEventListener('click', () => {
+  btnHandoverOtpConfirm.textContent = 'Проверяем…';
+  btnHandoverOtpConfirm.disabled = true;
   setTimeout(() => {
-    const req = getCurrentRequest();
-    if (req) {
-      const now = new Date();
-      const amountDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
-      merchHistory.unshift({
-        name: req.productName || 'Товар',
-        phone: req.phone || '+998 90 ···· 4412',
-        date: `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`,
-        amount: req.price || '0',
-        amountDigits,
-      });
-      // Mark shipped (drops off the merchant's live list) without deleting it — the client's
-      // installment is still active and keeps showing under "Активные" until fully paid off.
-      req.shipped = true;
-    }
-    showToast('Товар отгружен! Средства поступят в течение 1 рабочего дня');
-    showScreen('screen-merch-done');
-  }, 1000);
+    closeHandoverOtp();
+    btnHandoverOtpConfirm.textContent = 'Подтвердить выдачу';
+    shipCurrentRequest();
+  }, 700);
 });
