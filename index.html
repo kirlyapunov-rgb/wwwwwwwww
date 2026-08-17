@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=27">
 </head>
 <body>
 
@@ -369,13 +369,13 @@
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M7 14L12 19L21 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <p class="limit-label">Ваш лимит одобрен</p>
-          <h3 class="limit-amount">7 000 000 <span class="limit-currency">сум</span></h3>
-          <p class="limit-sub">Доступно для покупок в рассрочку</p>
-          <div class="limit-breakdown">
-            <div class="limit-breakdown-row"><span>3 мес</span><span>3 200 000 сум</span></div>
-            <div class="limit-breakdown-row"><span>6 мес</span><span>5 400 000 сум</span></div>
-            <div class="limit-breakdown-row"><span>9 мес</span><span>7 000 000 сум</span></div>
-            <div class="limit-breakdown-row"><span>12 мес</span><span>7 000 000 сум</span></div>
+          <h3 class="limit-amount"><span id="home-limit-amount">5 400 000</span> <span class="limit-currency">сум</span></h3>
+          <p class="limit-sub">Доступно для покупок в рассрочку — выберите срок</p>
+          <div class="term-select" id="home-term-select" style="width:100%;margin-top:4px;">
+            <button type="button" class="term-btn" data-term="3" data-amount="3 200 000">3 мес</button>
+            <button type="button" class="term-btn active" data-term="6" data-amount="5 400 000">6 мес</button>
+            <button type="button" class="term-btn" data-term="9" data-amount="7 000 000">9 мес</button>
+            <button type="button" class="term-btn" data-term="12" data-amount="7 000 000">12 мес</button>
           </div>
           <!-- QR-scan checkout disabled for now — screen-qr and its logic are untouched, just no longer linked here. Restore by uncommenting: -->
           <!-- <button class="btn btn-primary" data-nav="screen-qr">Оформить рассрочку</button> -->
@@ -528,6 +528,35 @@
         <div style="width:34px"></div>
       </header>
       <div class="screen-body">
+        <div class="inst-breadcrumb" id="inst-breadcrumb-request">
+          <div class="inst-bc-step" data-step="1">
+            <div class="inst-bc-dot"><span class="inst-bc-num">1</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Заявка отправлена</span>
+          </div>
+          <div class="inst-bc-line"></div>
+          <div class="inst-bc-step" data-step="2">
+            <div class="inst-bc-dot"><span class="inst-bc-num">2</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Условия получены</span>
+          </div>
+          <div class="inst-bc-line"></div>
+          <div class="inst-bc-step" data-step="3">
+            <div class="inst-bc-dot"><span class="inst-bc-num">3</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Вы подтвердили</span>
+          </div>
+          <div class="inst-bc-line"></div>
+          <div class="inst-bc-step" data-step="4">
+            <div class="inst-bc-dot"><span class="inst-bc-num">4</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Товар выдан</span>
+          </div>
+        </div>
+        <div class="inst-bc-next">
+          <div class="inst-bc-next-icon">→</div>
+          <div>
+            <p class="inst-bc-next-label">Следующий шаг</p>
+            <p class="inst-bc-next-text" id="inst-bc-next-request">Магазин подтвердит заявку и пришлёт условия рассрочки</p>
+          </div>
+        </div>
+
         <div class="inst-request-card">
           <div class="inst-request-top">
             <span class="inst-status-badge pending"><span class="inst-badge-dot"></span>Оформление</span>
@@ -549,7 +578,37 @@
         <div style="width:34px"></div>
       </header>
       <div class="screen-body" style="overflow-y:auto;">
-        <div class="inst-status-row" style="justify-content:flex-end;">
+        <div class="inst-breadcrumb" id="inst-breadcrumb-active">
+          <div class="inst-bc-step" data-step="1">
+            <div class="inst-bc-dot"><span class="inst-bc-num">1</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Заявка отправлена</span>
+          </div>
+          <div class="inst-bc-line"></div>
+          <div class="inst-bc-step" data-step="2">
+            <div class="inst-bc-dot"><span class="inst-bc-num">2</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Условия получены</span>
+          </div>
+          <div class="inst-bc-line"></div>
+          <div class="inst-bc-step" data-step="3">
+            <div class="inst-bc-dot"><span class="inst-bc-num">3</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Вы подтвердили</span>
+          </div>
+          <div class="inst-bc-line"></div>
+          <div class="inst-bc-step" data-step="4">
+            <div class="inst-bc-dot"><span class="inst-bc-num">4</span><svg class="inst-bc-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="inst-bc-label">Товар выдан</span>
+          </div>
+        </div>
+        <div class="inst-bc-next">
+          <div class="inst-bc-next-icon">→</div>
+          <div>
+            <p class="inst-bc-next-label">Следующий шаг</p>
+            <p class="inst-bc-next-text" id="inst-bc-next-active">Проверьте условия и нажмите «Подтвердить», чтобы продолжить</p>
+          </div>
+        </div>
+
+        <div class="inst-status-row" style="justify-content:space-between;">
+          <span class="inst-request-timer" id="inst-active-timer" style="display:none;"></span>
           <span id="installment-status-badge" class="inst-status-badge pending">
             <span class="inst-badge-dot"></span>Оформление
           </span>
@@ -578,6 +637,88 @@
         </div>
 
         <button class="btn btn-primary" id="btn-confirm-installment" style="width:100%;">Подтвердить условия рассрочки</button>
+        <button class="btn-merch-reject-app" id="btn-decline-installment" style="width:100%;margin-top:10px;">Отклонить заявку</button>
+      </div>
+    </section>
+
+    <!-- SCREEN DOWN PAYMENT (after confirming terms, before the installment activates) -->
+    <section class="screen" id="screen-installment-downpayment">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-installment-active" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="qr-screen-title">Первоначальный взнос</span>
+        <div style="width:34px"></div>
+      </header>
+
+      <div class="screen-body">
+        <div class="myid-badge">Последний шаг</div>
+        <h2 class="screen-title">Оплатите первоначальный взнос</h2>
+        <p class="screen-sub">Чтобы активировать рассрочку, нужно внести 30% от стоимости товара сейчас — остальное спишется по графику ниже</p>
+
+        <div class="inst-card" style="margin-bottom:16px;">
+          <div class="inst-product-info" style="padding:16px;">
+            <p class="inst-product-name" id="downpayment-item-name">Товар</p>
+            <p class="inst-product-store">Первоначальный взнос · 30%</p>
+            <span class="inst-price" id="downpayment-amount">0</span><span class="inst-price-label">сум</span>
+          </div>
+        </div>
+
+        <div class="privacy-note">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="9" rx="1.5" stroke="#7fa39c" stroke-width="1.2"/><path d="M2 6H14" stroke="#7fa39c" stroke-width="1.2"/><circle cx="11.5" cy="9" r="1" fill="#7fa39c"/></svg>
+          <span>Остаток <strong id="downpayment-remaining">0 сум</strong> будет списываться равными частями согласно графику платежей</span>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button type="button" class="btn-payme" id="btn-go-payme" data-nav="screen-payme-redirect">
+          <span class="btn-payme-logo">Payme</span>
+          <span>Оплатить</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN PAYME REDIRECT (simulated hand-off to a third-party payment app) -->
+    <section class="screen" id="screen-payme-redirect">
+      <div class="payme-header">
+        <button class="payme-close-btn" data-nav="screen-installment-downpayment" aria-label="Закрыть">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3L13 13M13 3L3 13" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <span class="payme-wordmark">Payme</span>
+        <div style="width:30px"></div>
+      </div>
+
+      <div class="payme-body">
+        <div class="payme-merchant-row" id="payme-pending-row">
+          <div class="payme-merchant-icon">A</div>
+          <div>
+            <p class="payme-merchant-label">Получатель</p>
+            <p class="payme-merchant-name">Amanat — Халяльная рассрочка</p>
+          </div>
+        </div>
+
+        <p class="payme-amount-label" id="payme-pending-label2">К оплате</p>
+        <h2 class="payme-amount" id="payme-amount">0 <span class="payme-amount-currency">сум</span></h2>
+
+        <div class="payme-card-select" id="payme-pending-card">
+          <div class="payme-card-mini">
+            <span class="payme-card-mini-chip"></span>
+            <span id="payme-card-number">•• 4412</span>
+          </div>
+          <span class="payme-card-change">Изменить</span>
+        </div>
+
+        <button type="button" class="btn-payme-confirm" id="btn-payme-confirm">Оплатить</button>
+
+        <!-- Success state (hidden until "payment" completes) -->
+        <div class="payme-success btn-hidden" id="payme-success-block">
+          <div class="payme-success-icon">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19" stroke="#fff" stroke-width="2"/><path d="M12 20.5L17 25.5L28 14" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h2 class="payme-success-title">Оплата прошла успешно</h2>
+          <p class="payme-success-sub" id="payme-success-sub">Взнос зачислен — возвращаем вас в Amanat</p>
+          <button type="button" class="btn btn-primary" id="btn-payme-done" style="width:100%;background:#fff;color:#0a8f6e;">Вернуться в Amanat</button>
+        </div>
       </div>
     </section>
 
@@ -909,6 +1050,126 @@
     </section>
 
     <!-- ════════════════════════════════════════
+         MERCHANT ENTRY (start screen: login, or register via Telegram bot)
+         ════════════════════════════════════════ -->
+
+    <!-- MERCH START SCREEN (login, or register as a new seller) -->
+    <section class="screen" id="screen-merch-login">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-phone" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </header>
+
+      <div class="screen-body welcome-body" style="padding-top:10px;">
+        <div class="welcome-logo-section">
+          <div class="welcome-logo-mark" style="background:linear-gradient(145deg,#0d2620 0%,#0a1f1c 100%);border-color:rgba(15,168,130,0.25);">
+            <svg width="34" height="34" viewBox="0 0 20 20" fill="none"><path d="M2 8L10 3L18 8V16C18 16.6 17.6 17 17 17H3C2.4 17 2 16.6 2 16V8Z" stroke="#14c99a" stroke-width="1.5" stroke-linejoin="round"/><rect x="7" y="11" width="6" height="6" rx="1" stroke="#14c99a" stroke-width="1.3"/></svg>
+          </div>
+          <h1 class="welcome-brand" style="font-size:26px;">Кабинет партнёра</h1>
+          <p class="welcome-tagline">Логин и пароль вам передаст менеджер — в боте или по звонку</p>
+        </div>
+
+        <div class="field" style="width:100%;margin-top:8px;">
+          <label for="merch-login-phone">Номер телефона</label>
+          <input type="text" id="merch-login-phone" placeholder="+998" inputmode="numeric" autocomplete="off">
+        </div>
+
+        <div class="field" style="width:100%;">
+          <label for="merch-login-password">Пароль</label>
+          <div class="password-wrap">
+            <input type="password" id="merch-login-password" placeholder="Введите пароль" autocomplete="current-password">
+            <button type="button" class="password-toggle" id="merch-login-password-toggle" aria-label="Показать пароль">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M1.5 10C3 6 6.3 3.7 10 3.7C13.7 3.7 17 6 18.5 10C17 14 13.7 16.3 10 16.3C6.3 16.3 3 14 1.5 10Z" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.4"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" id="btn-merch-login-confirm" data-nav="screen-merch-home" disabled>Войти</button>
+        <button type="button" class="btn btn-secondary" data-nav="screen-merch-tg" style="width:100%;">Зарегистрироваться как продавец</button>
+      </div>
+    </section>
+
+    <!-- MERCH REGISTRATION VIA TELEGRAM BOT (reached from the start screen) -->
+    <section class="screen" id="screen-merch-tg">
+      <div class="tg-header">
+        <button class="back-btn" data-nav="screen-merch-login" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="tg-bot-info">
+          <div class="tg-bot-avatar">🤝</div>
+          <div>
+            <div class="tg-bot-name">Amanat Partner Bot</div>
+            <div class="tg-bot-status">бот</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tg-chat-body" id="tg-chat-body">
+
+        <div class="tg-msg tg-msg-bot">
+          <div class="tg-bubble">Здравствуйте! Я бот Amanat для партнёров 🤝<br>Чтобы подключить магазин, пришлите, пожалуйста, 3 документа для проверки.</div>
+        </div>
+
+        <!-- Doc 1 -->
+        <div class="tg-msg tg-msg-bot">
+          <div class="tg-bubble">1️⃣ Свидетельство о государственной регистрации (ИП / ООО)</div>
+        </div>
+        <div class="tg-attach-row" id="tg-attach-1">
+          <button type="button" class="tg-attach-btn" data-doc="1">📎 Прикрепить документ</button>
+        </div>
+        <div class="tg-doc-group tg-hidden" id="tg-group-1">
+          <div class="tg-msg tg-msg-user"><div class="tg-bubble tg-bubble-user">📄 svidetelstvo_registracii.pdf</div></div>
+          <div class="tg-msg tg-msg-bot"><div class="tg-bubble">Документ получен ✅</div></div>
+        </div>
+
+        <!-- Doc 2 -->
+        <div class="tg-msg tg-msg-bot tg-hidden" id="tg-prompt-2">
+          <div class="tg-bubble">2️⃣ Справка о присвоении ИНН (СТИР)</div>
+        </div>
+        <div class="tg-attach-row tg-hidden" id="tg-attach-2">
+          <button type="button" class="tg-attach-btn" data-doc="2">📎 Прикрепить документ</button>
+        </div>
+        <div class="tg-doc-group tg-hidden" id="tg-group-2">
+          <div class="tg-msg tg-msg-user"><div class="tg-bubble tg-bubble-user">📄 inn_spravka.pdf</div></div>
+          <div class="tg-msg tg-msg-bot"><div class="tg-bubble">Документ получен ✅</div></div>
+        </div>
+
+        <!-- Doc 3 -->
+        <div class="tg-msg tg-msg-bot tg-hidden" id="tg-prompt-3">
+          <div class="tg-bubble">3️⃣ Паспорт владельца или руководителя (разворот с фото)</div>
+        </div>
+        <div class="tg-attach-row tg-hidden" id="tg-attach-3">
+          <button type="button" class="tg-attach-btn" data-doc="3">📎 Прикрепить документ</button>
+        </div>
+        <div class="tg-doc-group tg-hidden" id="tg-group-3">
+          <div class="tg-msg tg-msg-user"><div class="tg-bubble tg-bubble-user">📄 pasport_vladelca.pdf</div></div>
+          <div class="tg-msg tg-msg-bot"><div class="tg-bubble">Документ получен ✅</div></div>
+        </div>
+
+        <!-- Final -->
+        <div class="tg-final-group tg-hidden" id="tg-final-group">
+          <div class="tg-msg tg-msg-bot">
+            <div class="tg-bubble">Спасибо! Все документы получены. 📋<br>Заявка передана на проверку — обычно это занимает 1–2 рабочих дня. Наш менеджер свяжется с вами в этом чате или по звонку и передаст логин и пароль для входа в личный кабинет.</div>
+          </div>
+          <div class="tg-system-msg">
+            <span class="pending-dot" style="background:#229ED9;"></span>
+            <span>Заявка №АМ-ТГ-2026-<span id="tg-app-num">0000</span> · На рассмотрении</span>
+          </div>
+          <button type="button" class="btn btn-primary" data-nav="screen-merch-login" style="width:calc(100% - 8px);margin:10px auto 4px;">Вернуться на экран входа</button>
+        </div>
+
+      </div>
+
+      <div class="tg-input-bar">
+        <span class="tg-input-attach">📎</span>
+        <span class="tg-input-fake">Сообщение…</span>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════
          MERCHANT APP SCREENS
          ════════════════════════════════════════ -->
 
@@ -947,13 +1208,6 @@
           <span class="merch-payout-arrow">›</span>
         </button>
 
-        <!-- Filter: all requests / mine / client's -->
-        <div class="merch-filter-row" id="merch-filter-row">
-          <button type="button" class="merch-filter-btn active" data-filter="all">Все</button>
-          <button type="button" class="merch-filter-btn" data-filter="self">От меня</button>
-          <button type="button" class="merch-filter-btn" data-filter="client">От клиента</button>
-        </div>
-
         <div id="merch-requests-list"></div>
 
         <div id="merch-requests-empty">
@@ -973,15 +1227,16 @@
           <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="2.5" width="13" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 6.5H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 10H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 13.5H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span>История</span>
         </button>
-        <button class="tab-btn tab-btn-fab" data-nav="screen-merch-new-form">
+        <span class="tab-btn-spacer" aria-hidden="true"></span>
+        <button class="tab-btn" data-nav="screen-merch-account">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 16.5C4 13.5 6.5 11.5 10 11.5C13.5 11.5 16 13.5 16 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Аккаунт</span>
+        </button>
+        <button type="button" class="merch-tabbar-fab" data-nav="screen-merch-new-form">
           <span class="tab-fab-circle">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3.5V16.5M3.5 10H16.5" stroke="#23180a" stroke-width="2.2" stroke-linecap="round"/></svg>
           </span>
           <span>Новая</span>
-        </button>
-        <button class="tab-btn" data-nav="screen-merch-account">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 16.5C4 13.5 6.5 11.5 10 11.5C13.5 11.5 16 13.5 16 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <span>Аккаунт</span>
         </button>
       </nav>
     </section>
@@ -1038,15 +1293,16 @@
           <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="2.5" width="13" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 6.5H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 10H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 13.5H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span>История</span>
         </button>
-        <button class="tab-btn tab-btn-fab" data-nav="screen-merch-new-form">
+        <span class="tab-btn-spacer" aria-hidden="true"></span>
+        <button class="tab-btn" data-nav="screen-merch-account">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 16.5C4 13.5 6.5 11.5 10 11.5C13.5 11.5 16 13.5 16 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Аккаунт</span>
+        </button>
+        <button type="button" class="merch-tabbar-fab" data-nav="screen-merch-new-form">
           <span class="tab-fab-circle">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3.5V16.5M3.5 10H16.5" stroke="#23180a" stroke-width="2.2" stroke-linecap="round"/></svg>
           </span>
           <span>Новая</span>
-        </button>
-        <button class="tab-btn" data-nav="screen-merch-account">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 16.5C4 13.5 6.5 11.5 10 11.5C13.5 11.5 16 13.5 16 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <span>Аккаунт</span>
         </button>
       </nav>
     </section>
@@ -1117,15 +1373,16 @@
           <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="2.5" width="13" height="15" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 6.5H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 10H13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 13.5H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span>История</span>
         </button>
-        <button class="tab-btn tab-btn-fab" data-nav="screen-merch-new-form">
+        <span class="tab-btn-spacer" aria-hidden="true"></span>
+        <button class="tab-btn active" data-nav="screen-merch-account">
+          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 16.5C4 13.5 6.5 11.5 10 11.5C13.5 11.5 16 13.5 16 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Аккаунт</span>
+        </button>
+        <button type="button" class="merch-tabbar-fab" data-nav="screen-merch-new-form">
           <span class="tab-fab-circle">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3.5V16.5M3.5 10H16.5" stroke="#23180a" stroke-width="2.2" stroke-linecap="round"/></svg>
           </span>
           <span>Новая</span>
-        </button>
-        <button class="tab-btn active" data-nav="screen-merch-account">
-          <svg class="tab-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 16.5C4 13.5 6.5 11.5 10 11.5C13.5 11.5 16 13.5 16 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <span>Аккаунт</span>
         </button>
       </nav>
     </section>
@@ -1246,7 +1503,7 @@
         <button class="back-btn" data-nav="screen-merch-home" aria-label="Назад">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <span class="qr-screen-title">Статус заявки</span>
+        <span class="qr-screen-title" id="merch-pending-appnum">Статус заявки</span>
         <div style="width:34px"></div>
       </header>
 
@@ -1262,11 +1519,35 @@
         <div class="merch-push-time">сейчас</div>
       </div>
 
-      <div class="merch-status-body">
-        <div class="merch-status-icon spinning"></div>
-        <h2 class="merch-status-title">Заявка в обработке</h2>
-        <p class="merch-status-sub">Отправили клиенту — ожидаем, когда он примет условия и подтвердит рассрочку</p>
-        <button class="btn btn-primary" data-nav="screen-merch-home" style="width:100%;">На главную</button>
+      <div class="screen-body" style="overflow-y:auto;padding-bottom:16px;">
+        <div style="text-align:center;padding:20px 0 16px;">
+          <div class="merch-status-icon spinning" style="margin:0 auto 14px;"></div>
+          <h2 class="merch-status-title">Ожидаем ответа клиента</h2>
+          <p style="font-size:13px;color:var(--text-secondary);max-width:270px;margin:0 auto;">Клиент должен принять условия в течение <strong id="merch-pending-timer">15:00</strong>, иначе заявка автоматически отменится</p>
+        </div>
+
+        <div class="merch-incoming-card">
+          <div class="merch-detail-row"><span class="merch-detail-label">Товар</span><span class="merch-detail-value" id="merch-pending-name">—</span></div>
+          <div class="merch-detail-row"><span class="merch-detail-label">Маркировка</span><span class="merch-detail-value" id="merch-pending-marking">—</span></div>
+          <div class="merch-detail-row"><span class="merch-detail-label">Сумма</span><span class="merch-detail-value price-big" id="merch-pending-price">—</span></div>
+          <div class="merch-detail-row"><span class="merch-detail-label">Срок рассрочки</span><span class="merch-detail-value" id="merch-pending-term">—</span></div>
+          <div class="merch-detail-row"><span class="merch-detail-label">Клиент</span><span class="merch-detail-value" id="merch-pending-phone">—</span></div>
+        </div>
+
+        <div class="merch-incoming-card" style="margin-top:12px;">
+          <div style="display:flex;">
+            <div class="merch-incoming-img" style="flex:1;border-right:1px solid var(--border);padding:0;overflow:hidden;position:relative;height:90px;">
+              <img id="merch-pending-product-photo" src="" alt="Фото товара" style="width:100%;height:100%;object-fit:cover;display:none;">
+            </div>
+            <div class="merch-incoming-img" style="flex:1;padding:0;overflow:hidden;position:relative;height:90px;">
+              <img id="merch-pending-barcode-photo" src="" alt="Фото штрих-кода" style="width:100%;height:100%;object-fit:cover;display:none;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn-merch-reject-app" id="btn-merch-pending-delete" style="width:100%;">Удалить заявку</button>
       </div>
     </section>
 
@@ -1513,10 +1794,26 @@
           </div>
         </div>
 
+        <!-- Photo of the client with the product — required before handover can be confirmed -->
+        <div class="field" style="margin-top:14px;margin-bottom:0;">
+          <label>Фото клиента с товаром</label>
+          <div class="photo-upload-area" id="merch-ready-handover-photo-area">
+            <input type="file" id="merch-ready-handover-photo-input" accept="image/*" capture="environment">
+            <div class="photo-upload-content" id="merch-ready-handover-photo-content">
+              <div class="photo-upload-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M14.5 4H9.5L7 7H4C3.4 7 3 7.4 3 8V18C3 18.6 3.4 19 4 19H20C20.6 19 21 18.6 21 18V8C21 7.4 20.6 7 20 7H17L14.5 4Z" stroke="#4a6068" stroke-width="1.4" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" stroke="#4a6068" stroke-width="1.4"/></svg>
+              </div>
+              <p class="photo-upload-text">Сфотографируйте клиента с товаром</p>
+              <p class="photo-upload-sub">Обязательно перед выдачей</p>
+            </div>
+            <img id="merch-ready-handover-photo-preview" class="photo-preview" src="" alt="Фото клиента с товаром">
+          </div>
+        </div>
+
       </div>
 
       <div class="screen-footer">
-        <button class="btn-ship" id="btn-ship-goods">Товар отгружен</button>
+        <button class="btn-ship" id="btn-ship-goods" disabled>Товар отгружен</button>
       </div>
     </section>
 
@@ -1669,10 +1966,14 @@
     <button class="devnav-btn" data-goto="screen-installment">6. Рассрочка</button>
     <button class="devnav-btn" data-goto="screen-installment-request">6а. Заявка (детали)</button>
     <button class="devnav-btn" data-goto="screen-installment-active">6б. Активная (детали)</button>
+    <button class="devnav-btn" data-goto="screen-installment-downpayment">6в. Взнос</button>
+    <button class="devnav-btn" data-goto="screen-payme-redirect">6г. Payme</button>
     <button class="devnav-btn" data-goto="screen-sadaqa">7. Садака</button>
     <button class="devnav-btn" data-goto="screen-card">8. Карта</button>
     <button class="devnav-btn" data-goto="screen-loader">9. Лоудер</button>
     <button class="devnav-btn" data-goto="screen-qr">10. QR</button>
+    <button class="devnav-btn" data-goto="screen-merch-login" style="border-left:2px solid rgba(15,168,130,0.4);padding-left:14px;">МО. Продавец — старт</button>
+    <button class="devnav-btn" data-goto="screen-merch-tg">МО1. Заявка в боте</button>
     <button class="devnav-btn" data-goto="screen-merch-home" style="border-left:2px solid rgba(15,168,130,0.4);padding-left:14px;">М. Мерч</button>
     <button class="devnav-btn" data-goto="screen-merch-history">М0. История</button>
     <button class="devnav-btn" data-goto="screen-merch-deal-detail">М0а. Сделка (детали)</button>
@@ -1689,6 +1990,6 @@
   </nav>
 </div>
 
-<script src="script.js?v=14"></script>
+<script src="script.js?v=27"></script>
 </body>
 </html>
