@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=31">
+<link rel="stylesheet" href="style.css?v=32">
 </head>
 <body>
 
@@ -707,24 +707,24 @@
         <button class="back-btn" data-nav="screen-installment-active" aria-label="Назад">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <span class="qr-screen-title">Первоначальный взнос</span>
+        <span class="qr-screen-title" id="pay-screen-header-title">Первоначальный взнос</span>
         <div style="width:34px"></div>
       </header>
 
       <div class="screen-body">
-        <div class="myid-badge">Последний шаг</div>
-        <h2 class="screen-title">Оплатите первоначальный взнос</h2>
-        <p class="screen-sub">Чтобы активировать рассрочку, нужно внести 20% от стоимости товара сейчас — остальное спишется по графику ниже</p>
+        <div class="myid-badge" id="pay-screen-badge">Последний шаг</div>
+        <h2 class="screen-title" id="pay-screen-title">Оплатите первоначальный взнос</h2>
+        <p class="screen-sub" id="pay-screen-subtitle">Чтобы активировать рассрочку, нужно внести 20% от стоимости товара сейчас — остальное спишется по графику ниже</p>
 
         <div class="inst-card" style="margin-bottom:16px;">
           <div class="inst-product-info" style="padding:16px;">
             <p class="inst-product-name" id="downpayment-item-name">Товар</p>
-            <p class="inst-product-store">Первоначальный взнос · 20%</p>
+            <p class="inst-product-store" id="downpayment-label">Первоначальный взнос · 20%</p>
             <span class="inst-price" id="downpayment-amount">0</span><span class="inst-price-label">сум</span>
           </div>
         </div>
 
-        <div class="privacy-note" style="margin-bottom:20px;">
+        <div class="privacy-note" style="margin-bottom:20px;" id="downpayment-remaining-note">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="9" rx="1.5" stroke="#7fa39c" stroke-width="1.2"/><path d="M2 6H14" stroke="#7fa39c" stroke-width="1.2"/><circle cx="11.5" cy="9" r="1" fill="#7fa39c"/></svg>
           <span>Остаток <strong id="downpayment-remaining">0 сум</strong> будет списываться равными частями согласно графику платежей</span>
         </div>
@@ -2178,6 +2178,6 @@
   </nav>
 </div>
 
-<script src="script.js?v=31"></script>
+<script src="script.js?v=32"></script>
 </body>
 </html>

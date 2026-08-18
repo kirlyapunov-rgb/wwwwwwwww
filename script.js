@@ -1017,12 +1017,6 @@ screenEnterHandlers['screen-installment'] = renderInstallmentScreen;
 screenEnterHandlers['screen-installment-request'] = renderInstallmentScreen;
 screenEnterHandlers['screen-installment-active'] = renderInstallmentScreen;
 
-document.getElementById('btn-confirm-installment').addEventListener('click', () => {
-  const req = getClientRequest();
-  if (!req) return;
-  showScreen('screen-installment-downpayment');
-});
-
 document.getElementById('btn-decline-installment').addEventListener('click', () => {
   const req = getClientRequest();
   if (!req) return;
@@ -1039,6 +1033,45 @@ function getDownPaymentAmount(req) {
   return Math.round(priceDigits * DOWN_PAYMENT_RATE);
 }
 
+function getMonthlyAmount(req) {
+  const priceDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
+  const financedAmount = priceDigits - getDownPaymentAmount(req);
+  return req.term > 0 ? Math.round(financedAmount / req.term) : 0;
+}
+
+// --- Payment screen: one shared "pay now" screen (card / Payme / Click / Uzum) reused for the
+// down payment, a single monthly installment, or clearing the whole remaining balance. Whichever
+// triggered it sets paymentContext — the amount to show and what happens once it's "paid". ---
+let paymentContext = null;
+
+function openPaymentScreen({ headerTitle, title, subtitle, label, amount, showRemainingNote, onSuccess }) {
+  paymentContext = { amount, onSuccess };
+  document.getElementById('pay-screen-header-title').textContent = headerTitle;
+  document.getElementById('pay-screen-badge').textContent = showRemainingNote ? 'Последний шаг' : 'Оплата';
+  document.getElementById('pay-screen-title').textContent = title;
+  document.getElementById('pay-screen-subtitle').textContent = subtitle;
+  document.getElementById('downpayment-label').textContent = label;
+  document.getElementById('downpayment-remaining-note').classList.toggle('btn-hidden', !showRemainingNote);
+  showScreen('screen-installment-downpayment');
+}
+
+document.getElementById('btn-confirm-installment').addEventListener('click', () => {
+  const req = getClientRequest();
+  if (!req) return;
+  const priceDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
+  const downPayment = getDownPaymentAmount(req);
+  document.getElementById('downpayment-remaining').textContent = `${formatPrice(String(priceDigits - downPayment))} сум`;
+  openPaymentScreen({
+    headerTitle: 'Первоначальный взнос',
+    title: 'Оплатите первоначальный взнос',
+    subtitle: 'Чтобы активировать рассрочку, нужно внести 20% от стоимости товара сейчас — остальное спишется по графику ниже',
+    label: 'Первоначальный взнос · 20%',
+    amount: downPayment,
+    showRemainingNote: true,
+    onSuccess: activateInstallment,
+  });
+});
+
 // The installment only actually activates once the down payment is settled — by card here,
 // or via one of the third-party redirects below. All of them land on this same function.
 function activateInstallment() {
@@ -1049,6 +1082,51 @@ function activateInstallment() {
   document.getElementById('merch-ship-push-banner').classList.add('show');
   showScreen('screen-installment');
 }
+
+// --- Active installment: pay the next month, or clear the remaining balance — both go through
+// the same payment screen as the down payment (card / Payme / Click / Uzum) ---
+document.getElementById('btn-pay-next').addEventListener('click', () => {
+  const req = getClientRequest();
+  if (!req || req.paidMonths >= req.term) return;
+  const monthlyAmount = getMonthlyAmount(req);
+  openPaymentScreen({
+    headerTitle: 'Оплата платежа',
+    title: 'Оплатите следующий платёж',
+    subtitle: `Ежемесячный платёж по рассрочке за «${req.productName || 'товар'}»`,
+    label: `Платёж ${req.paidMonths + 1} из ${req.term}`,
+    amount: monthlyAmount,
+    showRemainingNote: false,
+    onSuccess: () => {
+      const r = getClientRequest();
+      if (!r) return;
+      r.paidMonths += 1;
+      showToast(r.paidMonths >= r.term ? 'Рассрочка полностью погашена!' : 'Платёж внесён');
+      showScreen('screen-installment-active');
+    },
+  });
+});
+
+document.getElementById('btn-pay-all').addEventListener('click', () => {
+  const req = getClientRequest();
+  if (!req || req.paidMonths >= req.term) return;
+  const monthlyAmount = getMonthlyAmount(req);
+  const remainingMonths = req.term - req.paidMonths;
+  openPaymentScreen({
+    headerTitle: 'Оплата платежа',
+    title: 'Оплатите оставшуюся сумму',
+    subtitle: `Погашает все оставшиеся ${remainingMonths} платеж(а/ей) по рассрочке сразу`,
+    label: `Оставшиеся платежи · ${remainingMonths} мес`,
+    amount: monthlyAmount * remainingMonths,
+    showRemainingNote: false,
+    onSuccess: () => {
+      const r = getClientRequest();
+      if (!r) return;
+      r.paidMonths = r.term;
+      showToast('Рассрочка полностью погашена!');
+      showScreen('screen-installment-active');
+    },
+  });
+});
 
 // --- Pay by card: reuses the card already bound during onboarding if there is one,
 // otherwise a small inline form lets the client add one without leaving the screen ---
@@ -1112,18 +1190,14 @@ btnPayWithCard.addEventListener('click', () => {
   }
   btnPayWithCard.disabled = true;
   btnPayWithCardLabel.textContent = 'Обрабатываем…';
-  setTimeout(activateInstallment, 1200);
+  setTimeout(() => { if (paymentContext) paymentContext.onSuccess(); }, 1200);
 });
 
 screenEnterHandlers['screen-installment-downpayment'] = () => {
+  if (!paymentContext) return;
   const req = getClientRequest();
-  if (!req) return;
-  const priceDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
-  const downPayment = getDownPaymentAmount(req);
-  const remaining = priceDigits - downPayment;
-  document.getElementById('downpayment-item-name').textContent = req.productName || 'Товар';
-  document.getElementById('downpayment-amount').textContent = formatPrice(String(downPayment));
-  document.getElementById('downpayment-remaining').textContent = `${formatPrice(String(remaining))} сум`;
+  document.getElementById('downpayment-item-name').textContent = (req && req.productName) || 'Товар';
+  document.getElementById('downpayment-amount').textContent = formatPrice(String(paymentContext.amount));
 
   payCardNumberInput.value = '';
   payCardExpiryInput.value = '';
@@ -1144,9 +1218,8 @@ function setupPayAppRedirect(provider) {
   const cardNumberEl = document.getElementById(`${provider}-card-number`);
 
   screenEnterHandlers[`screen-${provider}-redirect`] = () => {
-    const req = getClientRequest();
-    if (!req) return;
-    amountEl.innerHTML = `${formatPrice(String(getDownPaymentAmount(req)))} <span class="pay-app-amount-currency">сум</span>`;
+    if (!paymentContext) return;
+    amountEl.innerHTML = `${formatPrice(String(paymentContext.amount))} <span class="pay-app-amount-currency">сум</span>`;
     cardNumberEl.textContent = boundCardLast4 ? `•• ${boundCardLast4}` : '•• 4412';
 
     successBlock.classList.add('btn-hidden');
@@ -1166,27 +1239,12 @@ function setupPayAppRedirect(provider) {
     }, 1400);
   });
 
-  document.getElementById(`btn-${provider}-done`).addEventListener('click', activateInstallment);
+  document.getElementById(`btn-${provider}-done`).addEventListener('click', () => {
+    if (paymentContext) paymentContext.onSuccess();
+  });
 }
 
 ['payme', 'click', 'uzum'].forEach(setupPayAppRedirect);
-
-// --- Active installment: pay the next month, or clear the remaining balance in one go ---
-document.getElementById('btn-pay-next').addEventListener('click', () => {
-  const req = getClientRequest();
-  if (!req || req.paidMonths >= req.term) return;
-  req.paidMonths += 1;
-  showToast(req.paidMonths >= req.term ? 'Рассрочка полностью погашена!' : 'Платёж внесён');
-  renderInstallmentScreen();
-});
-
-document.getElementById('btn-pay-all').addEventListener('click', () => {
-  const req = getClientRequest();
-  if (!req || req.paidMonths >= req.term) return;
-  req.paidMonths = req.term;
-  showToast('Рассрочка полностью погашена!');
-  renderInstallmentScreen();
-});
 
 // ════════════════════════════════════════
 // MERCHANT APP
