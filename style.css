@@ -613,20 +613,20 @@ html, body {
 .devnav {
   position: fixed;
   top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 20px;
+  bottom: 20px;
+  width: 190px;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 92vw;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(0,0,0,0.1);
   border-radius: 12px;
-  padding: 8px;
+  padding: 10px;
   backdrop-filter: blur(8px);
   z-index: 200;
   box-shadow: 0 12px 30px -8px rgba(0,0,0,0.15);
+  overflow-y: auto;
 }
 
 .devnav-btn {
@@ -639,8 +639,10 @@ html, body {
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
+  text-align: left;
+  width: 100%;
+  flex-shrink: 0;
   transition: background 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
 }
 .devnav-btn:hover {
   background: rgba(212,153,26,0.1);
@@ -651,8 +653,8 @@ html, body {
   color: #1a0f00;
 }
 
-@media (max-width: 460px) {
-  .devnav { top: 8px; padding: 6px; gap: 4px; }
+@media (max-width: 680px) {
+  .devnav { width: 150px; padding: 8px; gap: 2px; }
   .devnav-btn { padding: 6px 8px; font-size: 11px; }
 }
 
@@ -2129,6 +2131,13 @@ html, body {
 .payment-month { font-size: 13px; color: var(--text-primary); }
 .payment-date { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .payment-amount { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+
+.payment-row-downpayment {
+  background: rgba(212,153,26,0.08);
+  border-bottom: 1.5px solid rgba(212,153,26,0.25) !important;
+}
+.payment-row-downpayment .payment-month { color: var(--gold); font-weight: 700; }
+.payment-row-downpayment .payment-amount { color: var(--gold); }
 
 /* ---------- MERCH SCREENS ---------- */
 .merch-header {

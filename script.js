@@ -217,9 +217,16 @@ function homeActiveTermAmount() {
   return (active || homeTermBtns[0]).dataset.amount;
 }
 
+// Hover preview only on devices that actually support hover — on touch devices, an
+// element with both a mouseenter and a click listener needs two taps in iOS Safari
+// (the first tap only triggers the synthetic hover), which read as "click does nothing".
+const supportsHoverPreview = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
 homeTermBtns.forEach(btn => {
-  btn.addEventListener('mouseenter', () => { homeLimitAmountEl.textContent = btn.dataset.amount; });
-  btn.addEventListener('mouseleave', () => { homeLimitAmountEl.textContent = homeActiveTermAmount(); });
+  if (supportsHoverPreview) {
+    btn.addEventListener('mouseenter', () => { homeLimitAmountEl.textContent = btn.dataset.amount; });
+    btn.addEventListener('mouseleave', () => { homeLimitAmountEl.textContent = homeActiveTermAmount(); });
+  }
   btn.addEventListener('click', () => {
     homeTermBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -826,9 +833,14 @@ const RU_MONTHS = ['Январь','Февраль','Март','Апрель','М
 function renderPaymentSchedule(term, priceDigits) {
   const container = document.getElementById('payment-schedule-rows');
   if (!container) return;
-  const monthlyAmount = term > 0 ? Math.round(priceDigits / term) : 0;
+
+  // The down payment is paid upfront, separately — only the remainder is what's actually financed.
+  const downPayment = Math.round(priceDigits * DOWN_PAYMENT_RATE);
+  const financedAmount = priceDigits - downPayment;
+  const monthlyAmount = term > 0 ? Math.round(financedAmount / term) : 0;
   const monthlyLabel = `${formatPrice(String(monthlyAmount))} сум / мес`;
   document.getElementById('payment-schedule-term-label').textContent = monthlyLabel;
+  document.getElementById('payment-downpayment-amount').textContent = `${formatPrice(String(downPayment))} сум`;
 
   container.innerHTML = '';
   let month = 7; // August (0-based index)
