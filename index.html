@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=27">
+<link rel="stylesheet" href="style.css?v=28">
 </head>
 <body>
 
@@ -103,7 +103,46 @@
 
       <div class="screen-footer">
         <button class="btn btn-primary" id="btn-scan">Начать сканирование</button>
-        <button class="btn btn-primary btn-hidden" id="btn-continue-2" data-nav="screen-password">Продолжить</button>
+        <button class="btn btn-primary btn-hidden" id="btn-continue-2" data-nav="screen-oneid">Продолжить</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 3б: ONEID (instructions only) -->
+    <section class="screen" id="screen-oneid">
+      <header class="screen-header">
+        <button class="back-btn" data-nav="screen-myid" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="steps">
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot done"></span>
+          <span class="dot active"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="step-label">Шаг 4 из 5</span>
+      </header>
+
+      <div class="screen-body">
+        <div class="myid-badge">OneID</div>
+        <h2 class="screen-title">Разрешите доступ через OneID</h2>
+        <p class="screen-sub">Это нужно один раз, чтобы завершить проверку личности. Выполните шаги на портале OneID:</p>
+
+        <ol class="oneid-steps">
+          <li><span class="oneid-step-num">1</span><span>Перейдите на OneID</span></li>
+          <li><span class="oneid-step-num">2</span><span>Выберите раздел «Управление»</span></li>
+          <li><span class="oneid-step-num">3</span><span>Выберите «Пейлетер»</span></li>
+          <li><span class="oneid-step-num">4</span><span>Нажмите «Разрешить»</span></li>
+        </ol>
+
+        <div class="privacy-note">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="#7fa39c" stroke-width="1.2"/><path d="M5.5 7V4.8C5.5 3.25 6.7 2 8 2C9.3 2 10.5 3.25 10.5 4.8V7" stroke="#7fa39c" stroke-width="1.2"/></svg>
+          <span>Доступ можно отозвать в любой момент в личном кабинете OneID</span>
+        </div>
+      </div>
+
+      <div class="screen-footer">
+        <button class="btn btn-primary" data-nav="screen-password">Готово, я разрешил доступ</button>
       </div>
     </section>
 
@@ -224,7 +263,7 @@
     <!-- SCREEN 7: CREATE PASSWORD -->
     <section class="screen" id="screen-password">
       <header class="screen-header">
-        <button class="back-btn" data-nav="screen-myid" aria-label="Назад">
+        <button class="back-btn" data-nav="screen-oneid" aria-label="Назад">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="steps">
@@ -1960,6 +1999,7 @@
     <button class="devnav-btn" data-goto="screen-otp">2. ОТП</button>
     <button class="devnav-btn" data-goto="screen-idform">2б. Паспорт</button>
     <button class="devnav-btn" data-goto="screen-myid">2в. MyID</button>
+    <button class="devnav-btn" data-goto="screen-oneid">2г. OneID</button>
     <button class="devnav-btn" data-goto="screen-password">3. Пароль</button>
     <button class="devnav-btn" data-goto="screen-pin">4. Пин-код</button>
     <button class="devnav-btn" data-goto="screen-home">5. Главная</button>
@@ -1990,6 +2030,6 @@
   </nav>
 </div>
 
-<script src="script.js?v=27"></script>
+<script src="script.js?v=28"></script>
 </body>
 </html>
