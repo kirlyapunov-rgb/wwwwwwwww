@@ -513,25 +513,75 @@ screenEnterHandlers['screen-card'] = () => {
 // --- Loader simulation ---
 const loaderSpinner = document.getElementById('loader-spinner');
 const loaderCheck = document.getElementById('loader-check');
+const loaderDeclineIcon = document.getElementById('loader-decline-icon');
 const loaderText = document.getElementById('loader-text');
 const loaderSub = document.getElementById('loader-sub');
 const loaderDoneBtn = document.getElementById('btn-loader-done');
 
+// Which flow sent the client to bind a card + get scored: plain onboarding (always approves,
+// same as before), or confirming a merchant's offer without a card on file yet — where the
+// limit check can now come back declined. The sidebar "Исход лимита" toggle controls that
+// outcome for demos, since it isn't something worth wiring up real underwriting logic for here.
+let cardBindPurpose = 'onboarding';
+let limitOutcomeOverride = 'approved';
+let loaderDoneAction = null;
+
+document.querySelectorAll('.devnav-toggle-btn[data-limit-outcome]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.devnav-toggle-btn[data-limit-outcome]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    limitOutcomeOverride = btn.dataset.limitOutcome;
+  });
+});
+
+loaderDoneBtn.addEventListener('click', () => {
+  if (loaderDoneAction) loaderDoneAction();
+});
+
 screenEnterHandlers['screen-loader'] = () => {
   loaderSpinner.style.display = 'flex';
   loaderCheck.classList.remove('show');
+  loaderDeclineIcon.classList.remove('show');
   loaderText.textContent = 'Оформляем ваш лимит…';
   loaderSub.textContent = 'Это займёт несколько секунд';
   loaderDoneBtn.classList.add('btn-hidden');
 
+  const purpose = cardBindPurpose;
+  cardBindPurpose = 'onboarding'; // consumed — reset so a later plain card-bind isn't affected
+
   clearTimeout(screenEnterHandlers._loaderTimeout);
   screenEnterHandlers._loaderTimeout = setTimeout(() => {
     loaderSpinner.style.display = 'none';
-    loaderCheck.classList.add('show');
-    loaderText.textContent = 'Лимит одобрен!';
-    loaderSub.textContent = '7 000 000 сум доступно для покупок в рассрочку';
     cardBound = true;
     boundCardLast4 = cardNumberInput.value.replace(/\D/g, '').slice(-4) || boundCardLast4;
+
+    const req = purpose === 'installment' ? getClientRequest() : null;
+    const declined = purpose === 'installment' && limitOutcomeOverride === 'declined';
+
+    if (declined) {
+      loaderDeclineIcon.classList.add('show');
+      loaderText.textContent = 'Заявка отклонена';
+      const priceDigits = req ? (parseInt((req.price || '').replace(/\D/g, ''), 10) || 0) : 0;
+      loaderSub.innerHTML = `Лимита недостаточно для этой покупки.<br>Ваш лимит: 7 000 000 сум<br>Сумма заявки: ${formatPrice(String(priceDigits))} сум`;
+      loaderDoneBtn.textContent = 'Понятно';
+      loaderDoneBtn.removeAttribute('data-nav');
+      loaderDoneAction = () => {
+        if (req) req.status = 'declined';
+        showScreen('screen-installment');
+      };
+    } else {
+      loaderCheck.classList.add('show');
+      loaderText.textContent = 'Лимит одобрен!';
+      loaderSub.textContent = '7 000 000 сум доступно для покупок в рассрочку';
+      loaderDoneBtn.textContent = 'Отлично!';
+      if (purpose === 'installment') {
+        loaderDoneBtn.removeAttribute('data-nav');
+        loaderDoneAction = goToDownPayment;
+      } else {
+        loaderDoneBtn.setAttribute('data-nav', 'screen-home');
+        loaderDoneAction = null;
+      }
+    }
     loaderDoneBtn.classList.remove('btn-hidden');
   }, 2200);
 };
@@ -1055,7 +1105,9 @@ function openPaymentScreen({ headerTitle, title, subtitle, label, amount, showRe
   showScreen('screen-installment-downpayment');
 }
 
-document.getElementById('btn-confirm-installment').addEventListener('click', () => {
+// Reached either straight from "Подтвердить условия рассрочки" (card already on file), or after
+// the card-bind + limit-check loader above approves a client who didn't have one yet.
+function goToDownPayment() {
   const req = getClientRequest();
   if (!req) return;
   const priceDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
@@ -1070,6 +1122,18 @@ document.getElementById('btn-confirm-installment').addEventListener('click', () 
     showRemainingNote: true,
     onSuccess: activateInstallment,
   });
+}
+
+document.getElementById('btn-confirm-installment').addEventListener('click', () => {
+  const req = getClientRequest();
+  if (!req) return;
+  if (!cardBound) {
+    // No card on file — go bind one and run the limit check before the down payment.
+    cardBindPurpose = 'installment';
+    showScreen('screen-card');
+    return;
+  }
+  goToDownPayment();
 });
 
 // The installment only actually activates once the down payment is settled — by card here,

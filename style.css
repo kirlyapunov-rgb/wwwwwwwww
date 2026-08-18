@@ -653,6 +653,46 @@ html, body {
   color: #1a0f00;
 }
 
+.devnav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 6px 4px;
+}
+.devnav-toggle-row {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+.devnav-toggle-btn {
+  flex: 1;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 6px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-family: inherit;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.devnav-toggle-btn.active[data-limit-outcome="approved"] {
+  background: rgba(15,168,130,0.12);
+  color: var(--teal);
+  border-color: rgba(15,168,130,0.35);
+}
+.devnav-toggle-btn.active[data-limit-outcome="declined"] {
+  background: rgba(224,96,64,0.12);
+  color: var(--coral);
+  border-color: rgba(224,96,64,0.35);
+}
+
 @media (max-width: 680px) {
   .devnav { width: 150px; padding: 8px; gap: 2px; }
   .devnav-btn { padding: 6px 8px; font-size: 11px; }

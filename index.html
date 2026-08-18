@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=32">
+<link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
 
@@ -1177,6 +1177,10 @@
           <circle cx="32" cy="32" r="30" stroke="#34d399" stroke-width="2.4"/>
           <path d="M20 33L28 41L44 23" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
+        <svg class="loader-check" id="loader-decline-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" stroke="#e06040" stroke-width="2.4"/>
+          <path d="M23 23L41 41M41 23L23 41" stroke="#e06040" stroke-width="3" stroke-linecap="round"/>
+        </svg>
         <p class="loader-text" id="loader-text">Оформляем ваш лимит…</p>
         <p class="loader-sub" id="loader-sub">Это займёт несколько секунд</p>
         <button class="btn btn-primary loader-done-btn btn-hidden" id="btn-loader-done" data-nav="screen-home">Отлично!</button>
@@ -2141,6 +2145,11 @@
   <div class="toast" id="toast"></div>
 
   <nav class="devnav" id="devnav">
+    <div class="devnav-section-label">Исход лимита (демо)</div>
+    <div class="devnav-toggle-row">
+      <button class="devnav-toggle-btn active" data-limit-outcome="approved">Одобрено</button>
+      <button class="devnav-toggle-btn" data-limit-outcome="declined">Отказано</button>
+    </div>
     <button class="devnav-btn" data-goto="screen-phone">1. Телефон</button>
     <button class="devnav-btn" data-goto="screen-otp">2. ОТП</button>
     <button class="devnav-btn" data-goto="screen-idform">2б. Паспорт</button>
@@ -2178,6 +2187,6 @@
   </nav>
 </div>
 
-<script src="script.js?v=32"></script>
+<script src="script.js?v=33"></script>
 </body>
 </html>
