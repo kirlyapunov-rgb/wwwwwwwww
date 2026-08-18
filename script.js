@@ -711,6 +711,7 @@ function createRequest(origin, phone) {
     barcodePhoto: '',
     deadline: Date.now() + REQUEST_TIMEOUT_MS,
     shipped: false,
+    paidMonths: 0, // how many of the monthly installments have been paid off
   };
   merchRequests.push(req);
   return req;
@@ -832,9 +833,11 @@ document.querySelectorAll('.sadaqa-donate-btn').forEach(btn => {
 // ════════════════════════════════════════
 const RU_MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-function renderPaymentSchedule(term, priceDigits) {
+// paidMonths: how many rows are already settled. Pass -1 before the installment is
+// active, so no row is highlighted as "paid" or "next" ahead of confirmation.
+function renderPaymentSchedule(term, priceDigits, paidMonths) {
   const container = document.getElementById('payment-schedule-rows');
-  if (!container) return;
+  if (!container) return 0;
 
   // The down payment is paid upfront, separately — only the remainder is what's actually financed.
   const downPayment = Math.round(priceDigits * DOWN_PAYMENT_RATE);
@@ -848,13 +851,19 @@ function renderPaymentSchedule(term, priceDigits) {
   let month = 7; // August (0-based index)
   let year = 2026;
   for (let i = 0; i < term; i++) {
+    const isPaid = paidMonths >= 0 && i < paidMonths;
+    const isNext = paidMonths >= 0 && i === paidMonths;
     const row = document.createElement('div');
-    row.className = 'payment-row';
-    row.innerHTML = `<div><div class="payment-month">${RU_MONTHS[month]} ${year}</div><div class="payment-date">10.${String(month + 1).padStart(2, '0')}.${year}</div></div><div class="payment-amount">${formatPrice(String(monthlyAmount))} сум</div>`;
+    row.className = `payment-row${isPaid ? ' payment-row-paid' : ''}${isNext ? ' payment-row-next' : ''}`;
+    const amountHTML = isPaid
+      ? '<span class="payment-paid-badge">Оплачено ✓</span>'
+      : `${formatPrice(String(monthlyAmount))} сум`;
+    row.innerHTML = `<div><div class="payment-month">${RU_MONTHS[month]} ${year}</div><div class="payment-date">10.${String(month + 1).padStart(2, '0')}.${year}</div></div><div class="payment-amount">${amountHTML}</div>`;
     container.appendChild(row);
     month++;
     if (month > 11) { month = 0; year++; }
   }
+  return monthlyAmount;
 }
 
 function formatCountdown(deadline) {
@@ -957,18 +966,30 @@ function renderInstallmentScreen() {
     document.getElementById('inst-price').textContent = req.price || '0';
     document.getElementById('inst-term-label').textContent = `сум · ${req.term} мес`;
     document.getElementById('inst-list-price').textContent = `${req.price || '0'} сум · ${req.term} мес`;
-    renderPaymentSchedule(req.term, priceDigits);
+    const monthlyAmount = renderPaymentSchedule(req.term, priceDigits, isActive ? req.paidMonths : -1);
+
+    const paymentActions = document.getElementById('inst-payment-actions');
+    const paymentDone = document.getElementById('inst-payment-fully-paid');
+    if (isActive) {
+      const fullyPaid = req.paidMonths >= req.term;
+      paymentActions.classList.toggle('btn-hidden', fullyPaid);
+      paymentDone.classList.toggle('btn-hidden', !fullyPaid);
+      if (!fullyPaid) {
+        const remainingMonths = req.term - req.paidMonths;
+        document.getElementById('btn-pay-next').textContent = `Оплатить следующий платёж · ${formatPrice(String(monthlyAmount))} сум`;
+        document.getElementById('btn-pay-all-amount').textContent = `${formatPrice(String(monthlyAmount * remainingMonths))} сум`;
+      }
+    } else {
+      paymentActions.classList.add('btn-hidden');
+      paymentDone.classList.add('btn-hidden');
+    }
 
     if (isActive) {
       badge.className = 'inst-status-badge active';
       badge.innerHTML = '<span class="inst-badge-dot"></span>Подтверждено вами';
       listBadge.className = 'inst-status-badge active';
       listBadge.innerHTML = '<span class="inst-badge-dot"></span>Подтверждено вами';
-      confirmBtn.style.display = '';
-      confirmBtn.textContent = 'Принято ✓';
-      confirmBtn.disabled = true;
-      confirmBtn.style.background = 'linear-gradient(135deg, #14c99a, #0fa882)';
-      confirmBtn.style.color = '#fff';
+      confirmBtn.style.display = 'none';
       declineBtn.style.display = 'none';
     } else if (isDeclined) {
       badge.className = 'inst-status-badge declined';
@@ -1010,8 +1031,8 @@ document.getElementById('btn-decline-installment').addEventListener('click', () 
   showScreen('screen-home');
 });
 
-// --- Down payment: 30% due now before the installment activates, the rest follows the schedule ---
-const DOWN_PAYMENT_RATE = 0.3;
+// --- Down payment: 20% due now before the installment activates, the rest follows the schedule ---
+const DOWN_PAYMENT_RATE = 0.2;
 
 function getDownPaymentAmount(req) {
   const priceDigits = parseInt((req.price || '').replace(/\D/g, ''), 10) || 0;
@@ -1149,6 +1170,23 @@ function setupPayAppRedirect(provider) {
 }
 
 ['payme', 'click', 'uzum'].forEach(setupPayAppRedirect);
+
+// --- Active installment: pay the next month, or clear the remaining balance in one go ---
+document.getElementById('btn-pay-next').addEventListener('click', () => {
+  const req = getClientRequest();
+  if (!req || req.paidMonths >= req.term) return;
+  req.paidMonths += 1;
+  showToast(req.paidMonths >= req.term ? 'Рассрочка полностью погашена!' : 'Платёж внесён');
+  renderInstallmentScreen();
+});
+
+document.getElementById('btn-pay-all').addEventListener('click', () => {
+  const req = getClientRequest();
+  if (!req || req.paidMonths >= req.term) return;
+  req.paidMonths = req.term;
+  showToast('Рассрочка полностью погашена!');
+  renderInstallmentScreen();
+});
 
 // ════════════════════════════════════════
 // MERCHANT APP

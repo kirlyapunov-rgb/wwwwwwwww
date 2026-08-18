@@ -2139,6 +2139,18 @@ html, body {
 .payment-row-downpayment .payment-month { color: var(--gold); font-weight: 700; }
 .payment-row-downpayment .payment-amount { color: var(--gold); }
 
+.payment-row-paid { opacity: 0.55; }
+.payment-row-paid .payment-month { text-decoration: line-through; }
+.payment-paid-badge { font-size: 11.5px; font-weight: 700; color: var(--teal); }
+
+.payment-row-next {
+  background: rgba(212,153,26,0.08);
+  border-left: 3px solid var(--gold);
+  padding-left: 13px !important;
+}
+.payment-row-next .payment-month { color: var(--gold); font-weight: 700; }
+.payment-row-next .payment-amount { color: var(--gold); }
+
 /* ---------- MERCH SCREENS ---------- */
 .merch-header {
   padding: 10px 22px 12px;

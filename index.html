@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=30">
+<link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
 
@@ -675,7 +675,7 @@
           <div class="payment-row payment-row-downpayment">
             <div>
               <div class="payment-month">Первоначальный взнос</div>
-              <div class="payment-date">30% от стоимости — оплачивается сразу</div>
+              <div class="payment-date">20% от стоимости — оплачивается сразу</div>
             </div>
             <div class="payment-amount" id="payment-downpayment-amount">0 сум</div>
           </div>
@@ -684,6 +684,20 @@
 
         <button class="btn btn-primary" id="btn-confirm-installment" style="width:100%;">Подтвердить условия рассрочки</button>
         <button class="btn-merch-reject-app" id="btn-decline-installment" style="width:100%;margin-top:10px;">Отклонить заявку</button>
+
+        <!-- Shown once the installment is active — pay the next month, or clear the rest in one go -->
+        <div class="btn-hidden" id="inst-payment-actions">
+          <button type="button" class="btn btn-primary" id="btn-pay-next" style="width:100%;">Оплатить следующий платёж</button>
+          <button type="button" class="btn btn-secondary" id="btn-pay-all" style="width:100%;margin-top:10px;">Оплатить всё · <span id="btn-pay-all-amount">0 сум</span></button>
+        </div>
+
+        <!-- Shown once every monthly payment is settled -->
+        <div class="btn-hidden" id="inst-payment-fully-paid" style="text-align:center;padding:20px 0 4px;">
+          <div class="merch-status-icon success-teal" style="margin:0 auto 14px;">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M9 18.5L14.5 24L27 12" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <p style="font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--text-primary);">Рассрочка полностью погашена</p>
+        </div>
       </div>
     </section>
 
@@ -700,12 +714,12 @@
       <div class="screen-body">
         <div class="myid-badge">Последний шаг</div>
         <h2 class="screen-title">Оплатите первоначальный взнос</h2>
-        <p class="screen-sub">Чтобы активировать рассрочку, нужно внести 30% от стоимости товара сейчас — остальное спишется по графику ниже</p>
+        <p class="screen-sub">Чтобы активировать рассрочку, нужно внести 20% от стоимости товара сейчас — остальное спишется по графику ниже</p>
 
         <div class="inst-card" style="margin-bottom:16px;">
           <div class="inst-product-info" style="padding:16px;">
             <p class="inst-product-name" id="downpayment-item-name">Товар</p>
-            <p class="inst-product-store">Первоначальный взнос · 30%</p>
+            <p class="inst-product-store">Первоначальный взнос · 20%</p>
             <span class="inst-price" id="downpayment-amount">0</span><span class="inst-price-label">сум</span>
           </div>
         </div>
@@ -2164,6 +2178,6 @@
   </nav>
 </div>
 
-<script src="script.js?v=30"></script>
+<script src="script.js?v=31"></script>
 </body>
 </html>
