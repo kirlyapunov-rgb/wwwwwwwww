@@ -1,5 +1,6 @@
 const screenEnterHandlers = {};
 let cardBound = false;
+let boundCardLast4 = null;
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -530,6 +531,7 @@ screenEnterHandlers['screen-loader'] = () => {
     loaderText.textContent = 'Лимит одобрен!';
     loaderSub.textContent = '7 000 000 сум доступно для покупок в рассрочку';
     cardBound = true;
+    boundCardLast4 = cardNumberInput.value.replace(/\D/g, '').slice(-4) || boundCardLast4;
     loaderDoneBtn.classList.remove('btn-hidden');
   }, 2200);
 };
@@ -1016,6 +1018,82 @@ function getDownPaymentAmount(req) {
   return Math.round(priceDigits * DOWN_PAYMENT_RATE);
 }
 
+// The installment only actually activates once the down payment is settled — by card here,
+// or via one of the third-party redirects below. All of them land on this same function.
+function activateInstallment() {
+  const req = getClientRequest();
+  if (!req) return;
+  req.status = 'confirmed';
+  showToast('Рассрочка подтверждена! Можете забрать товар в магазине');
+  document.getElementById('merch-ship-push-banner').classList.add('show');
+  showScreen('screen-installment');
+}
+
+// --- Pay by card: reuses the card already bound during onboarding if there is one,
+// otherwise a small inline form lets the client add one without leaving the screen ---
+const payCardChip = document.getElementById('pay-card-chip');
+const payCardChipNumber = document.getElementById('pay-card-chip-number');
+const payAddCardChip = document.getElementById('pay-add-card-chip');
+const payCardInline = document.getElementById('pay-card-inline');
+const payCardNumberInput = document.getElementById('pay-card-number');
+const payCardExpiryInput = document.getElementById('pay-card-expiry');
+const payCardCvvInput = document.getElementById('pay-card-cvv');
+const btnPayWithCard = document.getElementById('btn-pay-with-card');
+const btnPayWithCardLabel = document.getElementById('btn-pay-with-card-label');
+
+function refreshPayCardState() {
+  const hasCard = !!boundCardLast4;
+  payCardChip.classList.toggle('btn-hidden', !hasCard);
+  payAddCardChip.classList.toggle('btn-hidden', hasCard);
+  payCardInline.classList.toggle('btn-hidden', hasCard);
+  if (hasCard) {
+    payCardChipNumber.textContent = `•• ${boundCardLast4}`;
+    btnPayWithCardLabel.textContent = `Оплатить картой •• ${boundCardLast4}`;
+    btnPayWithCard.disabled = false;
+  } else {
+    btnPayWithCardLabel.textContent = 'Привязать карту и оплатить';
+    validatePayCardInline();
+  }
+}
+
+function validatePayCardInline() {
+  if (boundCardLast4) return;
+  const numOk = payCardNumberInput.value.replace(/\D/g, '').length === 16;
+  const expOk = /^\d{2}\/\d{2}$/.test(payCardExpiryInput.value.trim());
+  const cvvOk = payCardCvvInput.value.trim().length === 3;
+  btnPayWithCard.disabled = !(numOk && expOk && cvvOk);
+}
+
+payAddCardChip.addEventListener('click', () => {
+  payAddCardChip.classList.add('btn-hidden');
+  payCardInline.classList.remove('btn-hidden');
+});
+
+payCardNumberInput.addEventListener('input', () => {
+  const digits = payCardNumberInput.value.replace(/\D/g, '').slice(0, 16);
+  payCardNumberInput.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  validatePayCardInline();
+});
+payCardExpiryInput.addEventListener('input', () => {
+  const digits = payCardExpiryInput.value.replace(/\D/g, '').slice(0, 4);
+  payCardExpiryInput.value = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  validatePayCardInline();
+});
+payCardCvvInput.addEventListener('input', () => {
+  payCardCvvInput.value = payCardCvvInput.value.replace(/\D/g, '').slice(0, 3);
+  validatePayCardInline();
+});
+
+btnPayWithCard.addEventListener('click', () => {
+  if (!boundCardLast4) {
+    boundCardLast4 = payCardNumberInput.value.replace(/\D/g, '').slice(-4);
+    cardBound = true;
+  }
+  btnPayWithCard.disabled = true;
+  btnPayWithCardLabel.textContent = 'Обрабатываем…';
+  setTimeout(activateInstallment, 1200);
+});
+
 screenEnterHandlers['screen-installment-downpayment'] = () => {
   const req = getClientRequest();
   if (!req) return;
@@ -1025,47 +1103,52 @@ screenEnterHandlers['screen-installment-downpayment'] = () => {
   document.getElementById('downpayment-item-name').textContent = req.productName || 'Товар';
   document.getElementById('downpayment-amount').textContent = formatPrice(String(downPayment));
   document.getElementById('downpayment-remaining').textContent = `${formatPrice(String(remaining))} сум`;
+
+  payCardNumberInput.value = '';
+  payCardExpiryInput.value = '';
+  payCardCvvInput.value = '';
+  refreshPayCardState();
 };
 
-// --- Payme redirect: simulated hand-off to a third-party payment app ---
-const paymeConfirmBtn = document.getElementById('btn-payme-confirm');
-const paymeSuccessBlock = document.getElementById('payme-success-block');
-const paymePendingEls = [
-  document.getElementById('payme-pending-row'),
-  document.getElementById('payme-pending-label2'),
-  document.getElementById('payme-pending-card'),
-];
+// --- Third-party redirects: simulated hand-off to Payme / Click / Uzum, one shared setup per provider ---
+function setupPayAppRedirect(provider) {
+  const amountEl = document.getElementById(`${provider}-amount`);
+  const confirmBtn = document.getElementById(`btn-${provider}-confirm`);
+  const successBlock = document.getElementById(`${provider}-success-block`);
+  const pendingEls = [
+    document.getElementById(`${provider}-pending-row`),
+    document.getElementById(`${provider}-pending-label2`),
+    document.getElementById(`${provider}-pending-card`),
+  ];
+  const cardNumberEl = document.getElementById(`${provider}-card-number`);
 
-screenEnterHandlers['screen-payme-redirect'] = () => {
-  const req = getClientRequest();
-  if (!req) return;
-  document.getElementById('payme-amount').innerHTML = `${formatPrice(String(getDownPaymentAmount(req)))} <span class="payme-amount-currency">сум</span>`;
+  screenEnterHandlers[`screen-${provider}-redirect`] = () => {
+    const req = getClientRequest();
+    if (!req) return;
+    amountEl.innerHTML = `${formatPrice(String(getDownPaymentAmount(req)))} <span class="pay-app-amount-currency">сум</span>`;
+    cardNumberEl.textContent = boundCardLast4 ? `•• ${boundCardLast4}` : '•• 4412';
 
-  paymeSuccessBlock.classList.add('btn-hidden');
-  paymePendingEls.forEach(el => { el.style.display = ''; });
-  paymeConfirmBtn.classList.remove('btn-hidden');
-  paymeConfirmBtn.disabled = false;
-  paymeConfirmBtn.textContent = 'Оплатить';
-};
+    successBlock.classList.add('btn-hidden');
+    pendingEls.forEach(el => { el.style.display = ''; });
+    confirmBtn.classList.remove('btn-hidden');
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Оплатить';
+  };
 
-paymeConfirmBtn.addEventListener('click', () => {
-  paymeConfirmBtn.disabled = true;
-  paymeConfirmBtn.textContent = 'Обрабатываем…';
-  setTimeout(() => {
-    paymeConfirmBtn.classList.add('btn-hidden');
-    paymePendingEls.forEach(el => { el.style.display = 'none'; });
-    paymeSuccessBlock.classList.remove('btn-hidden');
-  }, 1400);
-});
+  confirmBtn.addEventListener('click', () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Обрабатываем…';
+    setTimeout(() => {
+      confirmBtn.classList.add('btn-hidden');
+      pendingEls.forEach(el => { el.style.display = 'none'; });
+      successBlock.classList.remove('btn-hidden');
+    }, 1400);
+  });
 
-document.getElementById('btn-payme-done').addEventListener('click', () => {
-  const req = getClientRequest();
-  if (!req) return;
-  req.status = 'confirmed';
-  showToast('Рассрочка подтверждена! Можете забрать товар в магазине');
-  document.getElementById('merch-ship-push-banner').classList.add('show');
-  showScreen('screen-installment');
-});
+  document.getElementById(`btn-${provider}-done`).addEventListener('click', activateInstallment);
+}
+
+['payme', 'click', 'uzum'].forEach(setupPayAppRedirect);
 
 // ════════════════════════════════════════
 // MERCHANT APP

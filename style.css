@@ -2805,15 +2805,55 @@ html, body {
   line-height: 1.45;
 }
 
-/* ---------- DOWN PAYMENT / PAYME MOCK ---------- */
-.btn-payme {
-  width: 100%;
+/* ---------- DOWN PAYMENT: CARD + THIRD-PARTY APP MOCKS ---------- */
+
+/* Card chip / add-card picker on the down payment screen itself */
+.pay-method-row { display: flex; gap: 8px; }
+.pay-card-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--teal);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.pay-card-chip-icon {
+  width: 22px;
+  height: 16px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #f0c94a, #d4991a);
+  display: inline-block;
+  flex-shrink: 0;
+}
+.pay-add-card-chip {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #00c48c, #00915f);
-  color: #fff;
+  gap: 8px;
+  background: var(--surface);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.pay-add-card-chip:hover { border-color: var(--gold); color: var(--text-primary); }
+.pay-add-card-plus { font-size: 15px; line-height: 1; }
+
+.btn-pay-with-card {
+  width: 100%;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  color: #23180a;
   border: none;
   border-radius: 16px;
   padding: 16px;
@@ -2821,30 +2861,60 @@ html, body {
   font-weight: 700;
   font-family: var(--font-body);
   cursor: pointer;
-  box-shadow: 0 10px 24px -8px rgba(0,145,95,0.45);
-  transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
+  margin: 18px 0 20px;
+  box-shadow: 0 10px 24px -8px rgba(212,153,26,0.45);
+  transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), opacity 0.15s ease;
 }
-.btn-payme:hover { transform: translateY(-2px); }
-.btn-payme:active { transform: scale(0.96); }
-.btn-payme-logo {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: -0.3px;
-  background: rgba(255,255,255,0.2);
-  padding: 3px 10px;
-  border-radius: 8px;
+.btn-pay-with-card:hover { transform: translateY(-2px); }
+.btn-pay-with-card:active { transform: scale(0.96); }
+.btn-pay-with-card:disabled {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.payme-header {
+.pay-alt-label {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.pay-alt-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.pay-alt-btn {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  padding: 13px 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13.5px;
+  letter-spacing: -0.2px;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
+}
+.pay-alt-btn:hover { transform: translateY(-2px); }
+.pay-alt-btn:active { transform: scale(0.94); }
+.pay-alt-btn.provider-payme { background: linear-gradient(135deg, #00c48c, #00915f); }
+.pay-alt-btn.provider-click { background: linear-gradient(135deg, #4d8ef0, #1a56c4); }
+.pay-alt-btn.provider-uzum { background: linear-gradient(135deg, #a238ff, #6a0dda); }
+
+/* Theme colors for the full-screen redirect mocks — one shared structure, three providers */
+.theme-payme { --pay-c1: #00c48c; --pay-c2: #00915f; --pay-c3: #06392a; --pay-text: #0a8f6e; }
+.theme-click { --pay-c1: #4d8ef0; --pay-c2: #1a56c4; --pay-c3: #0a2450; --pay-text: #1a56c4; }
+.theme-uzum  { --pay-c1: #a238ff; --pay-c2: #6a0dda; --pay-c3: #2a0a4d; --pay-text: #6a0dda; }
+
+.pay-app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #00c48c, #00915f);
+  background: linear-gradient(135deg, var(--pay-c1), var(--pay-c2));
   flex-shrink: 0;
 }
-.payme-close-btn {
+.pay-app-close-btn {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -2855,7 +2925,7 @@ html, body {
   justify-content: center;
   cursor: pointer;
 }
-.payme-wordmark {
+.pay-app-wordmark {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 19px;
@@ -2863,19 +2933,19 @@ html, body {
   letter-spacing: -0.3px;
 }
 
-.payme-body {
+.pay-app-body {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   padding: 28px 24px;
-  background: linear-gradient(180deg, #00915f 0%, #06392a 100%);
+  background: linear-gradient(180deg, var(--pay-c2) 0%, var(--pay-c3) 100%);
   color: #fff;
   overflow-y: auto;
 }
 
-.payme-merchant-row {
+.pay-app-merchant-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2885,7 +2955,7 @@ html, body {
   width: 100%;
   margin-bottom: 24px;
 }
-.payme-merchant-icon {
+.pay-app-merchant-icon {
   width: 34px;
   height: 34px;
   border-radius: 10px;
@@ -2898,19 +2968,19 @@ html, body {
   font-size: 15px;
   flex-shrink: 0;
 }
-.payme-merchant-label { font-size: 10.5px; color: rgba(255,255,255,0.65); text-align: left; }
-.payme-merchant-name { font-size: 13px; font-weight: 700; text-align: left; }
+.pay-app-merchant-label { font-size: 10.5px; color: rgba(255,255,255,0.65); text-align: left; }
+.pay-app-merchant-name { font-size: 13px; font-weight: 700; text-align: left; }
 
-.payme-amount-label { font-size: 12.5px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
-.payme-amount {
+.pay-app-amount-label { font-size: 12.5px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+.pay-app-amount {
   font-family: var(--font-display);
   font-size: 38px;
   font-weight: 800;
   margin-bottom: 28px;
 }
-.payme-amount-currency { font-size: 20px; font-weight: 700; opacity: 0.85; }
+.pay-app-amount-currency { font-size: 20px; font-weight: 700; opacity: 0.85; }
 
-.payme-card-select {
+.pay-app-card-select {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2921,20 +2991,20 @@ html, body {
   padding: 12px 16px;
   margin-bottom: 22px;
 }
-.payme-card-mini { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13.5px; }
-.payme-card-mini-chip {
+.pay-app-card-mini { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13.5px; }
+.pay-app-card-mini-chip {
   width: 22px;
   height: 16px;
   border-radius: 3px;
   background: linear-gradient(135deg, #f0c94a, #d4991a);
   display: inline-block;
 }
-.payme-card-change { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 600; }
+.pay-app-card-change { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 600; }
 
-.btn-payme-confirm {
+.btn-pay-app-confirm {
   width: 100%;
   background: #fff;
-  color: #0a8f6e;
+  color: var(--pay-text);
   border: none;
   border-radius: 16px;
   padding: 16px;
@@ -2944,17 +3014,17 @@ html, body {
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
 }
-.btn-payme-confirm:hover { transform: translateY(-2px); }
-.btn-payme-confirm:active { transform: scale(0.96); }
-.btn-payme-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-pay-app-confirm:hover { transform: translateY(-2px); }
+.btn-pay-app-confirm:active { transform: scale(0.96); }
+.btn-pay-app-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.payme-success {
+.pay-app-success {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 12px;
 }
-.payme-success-icon {
+.pay-app-success-icon {
   width: 76px;
   height: 76px;
   border-radius: 50%;
@@ -2965,17 +3035,22 @@ html, body {
   margin-bottom: 18px;
   animation: pop-in 0.4s cubic-bezier(.34,1.56,.64,1);
 }
-.payme-success-title {
+.pay-app-success-title {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 19px;
   margin-bottom: 6px;
 }
-.payme-success-sub {
+.pay-app-success-sub {
   font-size: 13px;
   color: rgba(255,255,255,0.75);
   margin-bottom: 22px;
   max-width: 240px;
+}
+.btn-primary.theme-payme, .btn-primary.theme-click, .btn-primary.theme-uzum {
+  background: #fff;
+  color: var(--pay-text);
+  box-shadow: none;
 }
 
 /* ---------- ONEID INSTRUCTIONS ---------- */
